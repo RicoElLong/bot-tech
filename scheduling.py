@@ -1,13 +1,13 @@
 from datetime import date, datetime, time, timedelta
 from zoneinfo import ZoneInfo
 
-MOSCOW = ZoneInfo('Europe/Moscow')
+SAMARA = ZoneInfo('Europe/Samara')
 TIMES = tuple(f'{hour:02d}:00' for hour in range(8, 23, 2))
 BOOKING_DAYS = 7
 
 
 def local_now():
-    return datetime.now(MOSCOW)
+    return datetime.now(SAMARA)
 
 
 def booking_days():
@@ -19,7 +19,7 @@ def slot_start(day, clock):
     parsed = date.fromisoformat(day)
     if parsed.isoformat() != day or clock not in TIMES:
         raise ValueError('Некорректная дата или время')
-    return datetime.combine(parsed, time.fromisoformat(clock), MOSCOW)
+    return datetime.combine(parsed, time.fromisoformat(clock), SAMARA)
 
 
 def validate_slot(day, clock):

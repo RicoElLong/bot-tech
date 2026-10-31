@@ -1,6 +1,6 @@
 import sqlite3
-from datetime import datetime
-from scheduling import MOSCOW, booking_days, TIMES
+from datetime import datetime, timezone
+from scheduling import SAMARA, booking_days, slot_start, TIMES
 from storage import SlotUnavailable
 import tempfile
 import unittest
@@ -15,7 +15,7 @@ from storage import Store
 class FlowTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         for target in ('scheduling.local_now', 'storage.local_now'):
-            timer = patch(target, return_value=datetime(2030, 1, 1, 7, 0, tzinfo=MOSCOW))
+            timer = patch(target, return_value=datetime(2030, 1, 1, 7, 0, tzinfo=SAMARA))
             timer.start()
             self.addCleanup(timer.stop)
         self.temp = tempfile.TemporaryDirectory()
@@ -261,9 +261,17 @@ class FlowTests(unittest.IsolatedAsyncioTestCase):
             self.db.book(12, '2029-12-31', '08:00')
         with self.assertRaises(ValueError):
             self.db.book(12, '2030-01-01', '09:00')
-        with patch('storage.local_now', return_value=datetime(2030, 1, 1, 11, 0, tzinfo=MOSCOW)):
+        with patch('storage.local_now', return_value=datetime(2030, 1, 1, 11, 0, tzinfo=SAMARA)):
             self.assertNotIn('10:00', self.db.available_times('2030-01-01', 12))
         self.assertIsNone(self.db.latest(12)['booking'])
+
+    def test_samara_timezone_for_slots_and_visits(self):
+        slot = slot_start('2030-01-02', '08:00')
+        self.assertEqual(slot.astimezone(timezone.utc).hour, 4)
+        self.assertEqual(bot.display_time('2030-01-01T20:30:00+00:00'),
+                         '02.01.2030 00:30 Самара, UTC+4')
+        with patch('scheduling.local_now', return_value=datetime(2030, 1, 1, 20, 30, tzinfo=timezone.utc).astimezone(SAMARA)):
+            self.assertEqual(booking_days()[0], '2030-01-02')
 
     def test_phone_validation(self):
         for value in ['123', 'hello1234567890', '+1234567890123456', '']:

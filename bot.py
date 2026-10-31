@@ -3,7 +3,6 @@ import os
 import re
 from datetime import datetime
 from pathlib import Path
-from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
 from telegram import (BotCommand, BotCommandScopeChat, InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton,
@@ -12,7 +11,7 @@ from telegram.error import TelegramError
 from telegram.ext import (Application, CallbackQueryHandler, CommandHandler,
                           ContextTypes, MessageHandler, filters)
 from storage import Store, SlotUnavailable, canonical_phone
-from scheduling import booking_days
+from scheduling import SAMARA, booking_days
 
 ROOT = Path(__file__).resolve().parent
 BUTTON_DEFAULTS = {
@@ -98,7 +97,7 @@ async def myid(update, context):
 
 
 def display_time(value):
-    return datetime.fromisoformat(value).astimezone(ZoneInfo('Europe/Moscow')).strftime('%d.%m.%Y %H:%M МСК')
+    return datetime.fromisoformat(value).astimezone(SAMARA).strftime('%d.%m.%Y %H:%M Самара, UTC+4')
 
 
 async def admin(update, context):
@@ -202,7 +201,7 @@ async def show_dates(msg, uid, context):
     db.begin_booking(uid)
     buttons = [[InlineKeyboardButton(datetime.fromisoformat(day).strftime('%d.%m.%Y'), callback_data=f'book:day:{day}')]
                for day in booking_days()]
-    await msg.reply_text('Выберите дату визита (время московское). Отмена: /cancel.',
+    await msg.reply_text('Выберите дату визита (время Самары, UTC+4). Отмена: /cancel.',
                          reply_markup=InlineKeyboardMarkup(buttons))
 
 
@@ -211,7 +210,7 @@ async def show_times(msg, uid, day, context):
     buttons = [InlineKeyboardButton(clock, callback_data=f'book:slot:{day}:{clock}') for clock in clocks]
     rows = [buttons[i:i+2] for i in range(0, len(buttons), 2)]
     rows.append([InlineKeyboardButton(BUTTONS['CHANGE_DATE'], callback_data='book:dates')])
-    caption = f'{datetime.fromisoformat(day):%d.%m.%Y}: выберите свободное время (МСК).'
+    caption = f'{datetime.fromisoformat(day):%d.%m.%Y}: выберите свободное время (Самара, UTC+4).'
     if not clocks:
         caption = 'На эту дату свободного времени нет. Выберите другую дату.'
     await msg.reply_text(caption, reply_markup=InlineKeyboardMarkup(rows))
@@ -258,8 +257,8 @@ async def booking_callback(update, context):
         # Запись уже сохранена; ошибка старого сообщения не отменяет уведомления.
         pass
     row = db.latest(uid)
-    await notify(context, f'Запись к мастеру, заявка №{row["id"]}\n{user["name"]} (ID {uid})\nТелефон: {user["phone"]}\nДата и время: {booking} МСК\nПроблема: {row["problem"]}')
-    await query.message.reply_text(f'Вы записаны на {booking} (МСК). Выберите раздел меню.', reply_markup=MENU)
+    await notify(context, f'Запись к мастеру, заявка №{row["id"]}\n{user["name"]} (ID {uid})\nТелефон: {user["phone"]}\nДата и время: {booking} Самара, UTC+4\nПроблема: {row["problem"]}')
+    await query.message.reply_text(f'Вы записаны на {booking} (Самара, UTC+4). Выберите раздел меню.', reply_markup=MENU)
 
 
 async def cancel(update, context):

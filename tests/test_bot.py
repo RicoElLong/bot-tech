@@ -67,6 +67,21 @@ class FlowTests(unittest.IsolatedAsyncioTestCase):
         await admin(self.update, self.context)
         self.assertIn('Админ-панель', self.msg.reply_text.call_args.args[0])
 
+    async def test_admin_start_opens_client_flow(self):
+        self.user.id = 99
+        self.msg.reply_photo = AsyncMock()
+        await bot.start(self.update, self.context)
+        self.msg.reply_photo.assert_awaited_once()
+        self.assertIn('Добро пожаловать', self.msg.reply_photo.call_args.kwargs['caption'])
+        self.assertEqual(self.db.user(99)['stage'], 'phone')
+        await self.send('+79991234567')
+        await self.send('Не сливает воду')
+        await self.send('Далее')
+        self.assertEqual(self.db.latest(99)['problem'], 'Не сливает воду')
+        await admin(self.update, self.context)
+        self.assertIn('Админ-панель', self.msg.reply_text.call_args.args[0])
+        self.assertEqual(self.db.user(99)['stage'], 'menu')
+
     async def test_custom_buttons_route_to_actions(self):
         self.addCleanup(bot.configure_buttons)
         with patch.dict('os.environ', {'BUTTON_NEXT': 'Продолжить', 'BUTTON_BOOKING': 'Вызвать мастера'}):

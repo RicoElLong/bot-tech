@@ -77,9 +77,6 @@ async def notify(context, text):
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if is_admin(update.effective_user.id, context):
-        await admin(update, context)
-        return
     db = store(context)
     db.visit(update.effective_user)
     user = db.user(update.effective_user.id)

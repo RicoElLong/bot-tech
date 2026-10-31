@@ -1,3 +1,4 @@
+import sqlite3
 import tempfile
 import unittest
 from types import SimpleNamespace
@@ -51,6 +52,83 @@ class FlowTests(unittest.IsolatedAsyncioTestCase):
         await self.send('89991234567')
         await self.send('Далее')
         self.assertEqual(self.db.latest(12)['problem'], 'Не указана')
+
+    async def test_breakdown_updates_one_request_and_keeps_booking(self):
+        await self.send('8 (999) 123-45-67')
+        await self.send('Первая проблема')
+        await self.send('Далее')
+        first = dict(self.db.latest(12))
+        await self.send('Запись')
+        await self.send('Завтра в 12:00')
+        await self.send('Поломка')
+        await self.send('Теперь не набирает воду')
+        self.assertEqual(self.db.latest(12)['problem'], 'Первая проблема')
+        await self.send('Далее')
+        row = self.db.latest(12)
+        self.assertEqual(row['id'], first['id'])
+        self.assertEqual(row['created'], first['created'])
+        self.assertEqual(row['problem'], 'Теперь не набирает воду')
+        self.assertEqual(row['booking'], 'Завтра в 12:00')
+        self.assertEqual(self.db.counts()[2], 1)
+        self.assertIn('Заявка обновлена', self.context.bot.send_message.call_args.args[1])
+        await self.send('Поломка')
+        await self.send('Далее')
+        self.assertEqual(self.db.latest(12)['problem'], 'Теперь не набирает воду')
+
+    async def test_same_phone_after_start_and_from_another_account(self):
+        await self.send('89991234567')
+        await self.send('Первое описание')
+        await self.send('Далее')
+        request_id = self.db.latest(12)['id']
+        self.msg.reply_photo = AsyncMock()
+        await bot.start(self.update, self.context)
+        await self.send('+7 (999) 123-45-67')
+        await self.send('После повторного старта')
+        await self.send('Далее')
+        self.assertEqual(self.db.latest(12)['id'], request_id)
+        self.user.id = 13
+        self.db.visit(self.user)
+        await self.send('+79991234567')
+        await self.send('То же лицо с другого аккаунта')
+        await self.send('Далее')
+        self.assertEqual(self.db.latest(13)['id'], request_id)
+        self.assertEqual(self.db.counts()[2], 1)
+        self.user.id = 14
+        self.db.visit(self.user)
+        await self.send('+79991234568')
+        await self.send('Другая заявка')
+        await self.send('Далее')
+        self.assertEqual(self.db.counts()[2], 2)
+
+    def test_old_duplicates_migrate_without_losing_history(self):
+        legacy_path = Path(self.temp.name) / 'legacy.sqlite3'
+        with sqlite3.connect(legacy_path) as conn:
+            conn.executescript("""
+                CREATE TABLE requests(id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL,
+                    phone TEXT NOT NULL, problem TEXT NOT NULL, created TEXT NOT NULL, booking TEXT);
+                INSERT INTO requests VALUES(1,12,'89991234567','Старое описание','2026-01-01','Завтра');
+                INSERT INTO requests VALUES(2,12,'+79991234567','Новое описание','2026-02-01',NULL);
+                INSERT INTO requests VALUES(3,13,'+79991234568','Другой клиент','2026-03-01',NULL);
+            """)
+        legacy = Store(legacy_path)
+        try:
+            self.assertEqual(legacy.counts()[2], 2)
+            row = legacy.db.execute('SELECT * FROM requests WHERE id=1').fetchone()
+            self.assertEqual(row['problem'], 'Новое описание')
+            self.assertEqual(row['booking'], 'Завтра')
+            self.assertEqual(row['phone'], '+79991234567')
+            self.assertEqual(legacy.db.execute('SELECT COUNT(*) FROM requests_archive').fetchone()[0], 2)
+            with self.assertRaises(sqlite3.IntegrityError):
+                legacy.db.execute('INSERT INTO requests(user_id,phone,problem,created) VALUES(?,?,?,?)',
+                                  (15, '+79991234567', 'Дубликат', '2026-04-01'))
+        finally:
+            legacy.db.close()
+        reopened = Store(legacy_path)
+        try:
+            self.assertEqual(reopened.counts()[2], 2)
+            self.assertEqual(reopened.db.execute('SELECT COUNT(*) FROM requests_archive').fetchone()[0], 2)
+        finally:
+            reopened.db.close()
 
     async def test_foreign_contact_rejected(self):
         self.msg.contact = SimpleNamespace(user_id=13, phone_number='+79991234567')

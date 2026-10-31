@@ -1,3 +1,4 @@
+import re
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
@@ -5,6 +6,14 @@ from pathlib import Path
 
 def now():
     return datetime.now(timezone.utc).isoformat()
+
+
+def canonical_phone(phone):
+    digits = re.sub(r'\D', '', phone)
+    # Российские номера 8XXXXXXXXXX и +7XXXXXXXXXX — один контакт.
+    if len(digits) == 11 and digits.startswith('8'):
+        digits = '7' + digits[1:]
+    return '+' + digits
 
 
 class Store:
@@ -25,6 +34,29 @@ class Store:
                 problem TEXT NOT NULL, created TEXT NOT NULL, booking TEXT);
         ''')
         self.db.commit()
+        self._migrate_requests()
+
+    def _migrate_requests(self):
+        if self.db.execute("SELECT 1 FROM sqlite_master WHERE type='index' AND name='requests_phone_unique'").fetchone():
+            return
+        # Старые дубли сохраняем в архиве, прежде чем объединить активные заявки.
+        with self.db:
+            self.db.execute("""CREATE TABLE IF NOT EXISTS requests_archive (
+                id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL, phone TEXT NOT NULL,
+                problem TEXT NOT NULL, created TEXT NOT NULL, booking TEXT)""")
+            groups = {}
+            for row in self.db.execute('SELECT * FROM requests ORDER BY id').fetchall():
+                groups.setdefault(canonical_phone(row['phone']), []).append(row)
+            for phone, rows in groups.items():
+                first, last = rows[0], rows[-1]
+                if len(rows) > 1:
+                    self.db.executemany('INSERT OR IGNORE INTO requests_archive VALUES(?,?,?,?,?,?)',
+                                        [tuple(row) for row in rows])
+                    self.db.executemany('DELETE FROM requests WHERE id=?', [(row['id'],) for row in rows[1:]])
+                booking = next((row['booking'] for row in reversed(rows) if row['booking']), None)
+                self.db.execute('UPDATE requests SET phone=?,user_id=?,problem=?,booking=? WHERE id=?',
+                                (phone, last['user_id'], last['problem'], booking, first['id']))
+            self.db.execute('CREATE UNIQUE INDEX requests_phone_unique ON requests(phone)')
 
     def visit(self, user):
         timestamp = now()
@@ -44,7 +76,7 @@ class Store:
 
     def phone(self, uid, phone):
         with self.db:
-            self.db.execute("UPDATE users SET phone=?,stage='problem' WHERE id=?", (phone, uid))
+            self.db.execute("UPDATE users SET phone=?,stage='problem' WHERE id=?", (canonical_phone(phone), uid))
 
     def draft(self, uid, problem):
         with self.db:
@@ -58,14 +90,20 @@ class Store:
         draft = self.db.execute("SELECT problem FROM drafts WHERE user_id=?", (uid,)).fetchone()
         problem = draft[0] if draft else "Не указана"
         with self.db:
-            row = self.db.execute('INSERT INTO requests(user_id,phone,problem,created) VALUES(?,?,?,?)',
-                                  (uid, self.user(uid)['phone'], problem, now()))
+            row = self.db.execute("""INSERT INTO requests(user_id,phone,problem,created) VALUES(?,?,?,?)
+                ON CONFLICT(phone) DO UPDATE SET user_id=excluded.user_id,
+                    problem=CASE WHEN ? THEN excluded.problem ELSE requests.problem END
+                RETURNING id""",
+                (uid, canonical_phone(self.user(uid)['phone']), problem, now(), draft is not None)).fetchone()
             self.db.execute("UPDATE users SET stage='menu' WHERE id=?", (uid,))
             self.db.execute("DELETE FROM drafts WHERE user_id=?", (uid,))
-            return row.lastrowid
+            return row[0]
 
     def latest(self, uid):
-        return self.db.execute('SELECT * FROM requests WHERE user_id=? ORDER BY id DESC LIMIT 1', (uid,)).fetchone()
+        user = self.user(uid)
+        if not user or not user['phone']:
+            return None
+        return self.db.execute('SELECT * FROM requests WHERE phone=?', (canonical_phone(user['phone']),)).fetchone()
 
     def book(self, uid, text):
         with self.db:

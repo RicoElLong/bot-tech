@@ -11,7 +11,7 @@ from telegram import (BotCommand, BotCommandScopeChat, InlineKeyboardButton, Inl
 from telegram.error import TelegramError
 from telegram.ext import (Application, CallbackQueryHandler, CommandHandler,
                           ContextTypes, MessageHandler, filters)
-from storage import Store
+from storage import Store, canonical_phone
 
 ROOT = Path(__file__).resolve().parent
 BUTTON_DEFAULTS = {
@@ -56,7 +56,7 @@ def normalize_phone(text):
     if not re.fullmatch(r'\+?[\d\s()\-]+', text.strip()):
         return None
     digits = re.sub(r'\D', '', text)
-    return ('+' if text.strip().startswith('+') else '') + digits if 10 <= len(digits) <= 15 else None
+    return canonical_phone(text) if 10 <= len(digits) <= 15 else None
 
 
 def store(context):
@@ -156,10 +156,13 @@ async def message(update, context):
         await msg.reply_text(PROMPT, reply_markup=NEXT)
     elif stage == 'problem':
         if text == BUTTONS['NEXT']:
+            existing = db.latest(uid)
             request_id = db.submit(uid)
             row = db.latest(uid)
-            await notify(context, f'Новая заявка №{request_id}\n{user["name"]} (ID {uid})\nТелефон: {row["phone"]}\nПроблема и модель: {row["problem"]}')
-            await msg.reply_text('Спасибо! Заявка сохранена. Выберите раздел меню.', reply_markup=MENU)
+            title = 'Заявка обновлена' if existing else 'Новая заявка'
+            await notify(context, f'{title} №{request_id}\n{user["name"]} (ID {uid})\nТелефон: {row["phone"]}\nПроблема и модель: {row["problem"]}')
+            result = 'Заявка обновлена' if existing else 'Заявка сохранена'
+            await msg.reply_text(f'Спасибо! {result}. Выберите раздел меню.', reply_markup=MENU)
         elif text:
             if len(text) > 2000:
                 await msg.reply_text('Сократите описание до 2000 символов.')

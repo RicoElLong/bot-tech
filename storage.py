@@ -37,6 +37,7 @@ class Store:
             CREATE TABLE IF NOT EXISTS requests (
                 id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL, phone TEXT NOT NULL,
                 problem TEXT NOT NULL, created TEXT NOT NULL, booking TEXT);
+            CREATE TABLE IF NOT EXISTS request_tombstones (id INTEGER PRIMARY KEY);
             CREATE TABLE IF NOT EXISTS booking_selections (user_id INTEGER PRIMARY KEY, day TEXT NOT NULL);
             CREATE TABLE IF NOT EXISTS appointments (
                 id INTEGER PRIMARY KEY, request_id INTEGER NOT NULL,
@@ -104,7 +105,9 @@ class Store:
         draft = self.db.execute("SELECT problem FROM drafts WHERE user_id=?", (uid,)).fetchone()
         problem = draft[0] if draft else "Не указана"
         with self.db:
-            row = self.db.execute("""INSERT INTO requests(user_id,phone,problem,created) VALUES(?,?,?,?)
+            row = self.db.execute("""INSERT INTO requests(id,user_id,phone,problem,created)
+                VALUES((SELECT COALESCE(MAX(id),0)+1 FROM (
+                    SELECT id FROM requests UNION ALL SELECT id FROM request_tombstones)),?,?,?,?)
                 ON CONFLICT(phone) DO UPDATE SET user_id=excluded.user_id,
                     problem=CASE WHEN ? THEN excluded.problem ELSE requests.problem END
                 RETURNING id""",
@@ -162,6 +165,27 @@ class Store:
         except sqlite3.IntegrityError as error:
             raise SlotUnavailable('Это время уже занято. Выберите другое.') from error
         return booking
+
+    def request(self, request_id):
+        return self.db.execute('SELECT * FROM requests WHERE id=?', (request_id,)).fetchone()
+
+    def delete_request(self, request_id):
+        with self.db:
+            request = self.request(request_id)
+            if not request:
+                return False
+            # Не переиспользуем ID: старые кнопки не должны затрагивать новые заявки.
+            self.db.execute('INSERT OR IGNORE INTO request_tombstones(id) VALUES(?)', (request_id,))
+            self.db.execute('UPDATE appointments SET cancelled=? WHERE request_id=? AND cancelled IS NULL',
+                            (now(), request_id))
+            clients = self.db.execute('SELECT id FROM users WHERE phone=?', (request['phone'],)).fetchall()
+            for client in clients:
+                uid = client['id']
+                self.db.execute('DELETE FROM drafts WHERE user_id=?', (uid,))
+                self.db.execute('DELETE FROM booking_selections WHERE user_id=?', (uid,))
+                self.db.execute("UPDATE users SET stage='menu' WHERE id=?", (uid,))
+            self.db.execute('DELETE FROM requests WHERE id=?', (request_id,))
+        return True
 
     def page(self, kind, page, limit=5):
         queries = {

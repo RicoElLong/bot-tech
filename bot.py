@@ -24,6 +24,9 @@ BUTTON_DEFAULTS = {
     'OPEN_REVIEWS': 'Открыть отзывы',
     'ADMIN_VISITS': 'Кто и когда заходил',
     'ADMIN_REQUESTS': 'Заявки и телефоны',
+    'DELETE_REQUEST': 'Удалить заявку',
+    'CONFIRM_DELETE': 'Да, удалить',
+    'CANCEL_DELETE': 'Отмена',
     'BACK': '← Назад',
     'FORWARD': 'Далее →',
     'CHANGE_DATE': 'Выбрать другую дату',
@@ -131,7 +134,39 @@ async def admin_page(update, context):
         buttons.append(InlineKeyboardButton(BUTTONS['BACK'], callback_data=f'admin:{kind}:{page-1}'))
     if len(rows) > limit:
         buttons.append(InlineKeyboardButton(BUTTONS['FORWARD'], callback_data=f'admin:{kind}:{page+1}'))
-    await query.edit_message_text('\n\n'.join(entries) or 'Пока нет записей.', reply_markup=InlineKeyboardMarkup([buttons]) if buttons else None)
+    keyboard = [buttons] if buttons else []
+    if kind == 'requests' and rows:
+        keyboard.insert(0, [InlineKeyboardButton(BUTTONS['DELETE_REQUEST'],
+                           callback_data=f'admin:delete:{rows[0]["id"]}:{page}')])
+    await query.edit_message_text('\n\n'.join(entries) or 'Пока нет записей.',
+                                  reply_markup=InlineKeyboardMarkup(keyboard) if keyboard else None)
+
+
+async def admin_delete(update, context):
+    query = update.callback_query
+    if not is_admin(query.from_user.id, context):
+        await query.answer('Доступ запрещён', show_alert=True)
+        return
+    await query.answer()
+    _, action, raw_id, raw_page = query.data.split(':')
+    request_id, page = int(raw_id), int(raw_page)
+    db = store(context)
+    back = InlineKeyboardMarkup([[InlineKeyboardButton(BUTTONS['ADMIN_REQUESTS'], callback_data='admin:requests:0')]])
+    row = db.request(request_id)
+    if row is None:
+        await query.edit_message_text('Эта заявка уже удалена.', reply_markup=back)
+        return
+    if action == 'delete':
+        await query.edit_message_text(
+            f'Удалить заявку №{request_id}?\nТелефон: {row["phone"]}\nЗапись: {row["booking"] or "не указана"}\nЗанятое время будет освобождено.',
+            reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton(BUTTONS['CONFIRM_DELETE'], callback_data=f'admin:confirm_delete:{request_id}:{page}')],
+                [InlineKeyboardButton(BUTTONS['CANCEL_DELETE'], callback_data=f'admin:requests:{page}')],
+            ]))
+        return
+    deleted = db.delete_request(request_id)
+    text = f'Заявка №{request_id} удалена. Занятое время освобождено.' if deleted else 'Эта заявка уже удалена.'
+    await query.edit_message_text(text, reply_markup=back)
 
 
 async def message(update, context):
@@ -184,6 +219,9 @@ async def message(update, context):
         db.clear_draft(uid)
         await msg.reply_text(PROMPT, reply_markup=NEXT)
     elif text == BUTTONS['BOOKING']:
+        if not db.latest(uid):
+            await msg.reply_text('Заявки нет. Создайте новую через /start.', reply_markup=MENU)
+            return
         await msg.reply_text('Выберите дату и время визита мастера.', reply_markup=ReplyKeyboardRemove())
         await show_dates(msg, uid, context)
     elif stage in ('booking', 'booking_date', 'booking_time'):
@@ -317,6 +355,7 @@ def main():
     app.add_handler(CommandHandler('admin', admin, filters.ChatType.PRIVATE))
     app.add_handler(CommandHandler('cancel', cancel, filters.ChatType.PRIVATE))
     app.add_handler(CallbackQueryHandler(booking_callback, pattern=r'^book:(?:dates|day:\d{4}-\d{2}-\d{2}|slot:\d{4}-\d{2}-\d{2}:\d{2}:00)$'))
+    app.add_handler(CallbackQueryHandler(admin_delete, pattern=r'^admin:(delete|confirm_delete):\d+:\d+$'))
     app.add_handler(CallbackQueryHandler(admin_page, pattern=r'^admin:(visits|requests):\d+$'))
     app.add_handler(MessageHandler(filters.ChatType.PRIVATE & ~filters.COMMAND, message))
     app.add_error_handler(error_handler)

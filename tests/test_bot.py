@@ -265,6 +265,60 @@ class FlowTests(unittest.IsolatedAsyncioTestCase):
             self.assertNotIn('10:00', self.db.available_times('2030-01-01', 12))
         self.assertIsNone(self.db.latest(12)['booking'])
 
+    async def delete_click(self, data, admin_id=99):
+        query = SimpleNamespace(from_user=SimpleNamespace(id=admin_id), data=data,
+                                answer=AsyncMock(), edit_message_text=AsyncMock())
+        await bot.admin_delete(SimpleNamespace(callback_query=query), self.context)
+        return query
+
+    async def test_admin_delete_confirmation_and_slot_release(self):
+        await self.send('89991234567')
+        await self.send('Не работает')
+        await self.send('Далее')
+        await self.choose('10:00')
+        request_id = self.db.latest(12)['id']
+        query = SimpleNamespace(from_user=SimpleNamespace(id=99), data='admin:requests:0',
+                                answer=AsyncMock(), edit_message_text=AsyncMock())
+        await bot.admin_page(SimpleNamespace(callback_query=query), self.context)
+        keyboard = query.edit_message_text.call_args.kwargs['reply_markup']
+        self.assertEqual(keyboard.inline_keyboard[0][0].callback_data, f'admin:delete:{request_id}:0')
+        confirmation = await self.delete_click(f'admin:delete:{request_id}:0')
+        self.assertIsNotNone(self.db.latest(12))
+        keyboard = confirmation.edit_message_text.call_args.kwargs['reply_markup']
+        self.assertEqual(keyboard.inline_keyboard[1][0].callback_data, 'admin:requests:0')
+        # Возврат по кнопке отмены не удаляет заявку.
+        await bot.admin_page(SimpleNamespace(callback_query=query), self.context)
+        self.assertIsNotNone(self.db.latest(12))
+        await self.delete_click(f'admin:confirm_delete:{request_id}:0')
+        self.assertIsNone(self.db.latest(12))
+        self.assertEqual(self.db.counts()[2], 0)
+        self.assertIn('10:00', self.db.available_times('2030-01-01', 12))
+        self.assertEqual(self.db.db.execute('SELECT COUNT(*) FROM appointments WHERE cancelled IS NOT NULL').fetchone()[0], 1)
+        await self.send('Запись')
+        self.assertIn('Создайте новую', self.msg.reply_text.call_args.args[0])
+        await self.send('Поломка')
+        await self.send('Новая проблема')
+        await self.send('Далее')
+        new_id = self.db.latest(12)['id']
+        self.assertGreater(new_id, request_id)
+        await self.delete_click(f'admin:confirm_delete:{request_id}:0')
+        self.assertEqual(self.db.latest(12)['id'], new_id)
+        self.db.db.close()
+        self.db = Store(self.path)
+        self.context.application.bot_data['store'] = self.db
+        self.assertIsNone(self.db.request(request_id))
+        self.assertEqual(self.db.latest(12)['id'], new_id)
+
+    async def test_client_cannot_delete_even_with_confirmation_callback(self):
+        await self.send('89991234567')
+        await self.send('Далее')
+        request_id = self.db.latest(12)['id']
+        for action in ('delete', 'confirm_delete'):
+            query = await self.delete_click(f'admin:{action}:{request_id}:0', admin_id=12)
+            query.edit_message_text.assert_not_called()
+            self.assertTrue(query.answer.call_args.kwargs['show_alert'])
+            self.assertIsNotNone(self.db.latest(12))
+
     def test_samara_timezone_for_slots_and_visits(self):
         slot = slot_start('2030-01-02', '08:00')
         self.assertEqual(slot.astimezone(timezone.utc).hour, 4)

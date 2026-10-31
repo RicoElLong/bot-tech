@@ -7,11 +7,12 @@ from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
 from telegram import (BotCommand, BotCommandScopeChat, InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton,
-                      ReplyKeyboardMarkup, Update)
+                      ReplyKeyboardMarkup, ReplyKeyboardRemove, Update)
 from telegram.error import TelegramError
 from telegram.ext import (Application, CallbackQueryHandler, CommandHandler,
                           ContextTypes, MessageHandler, filters)
-from storage import Store, canonical_phone
+from storage import Store, SlotUnavailable, canonical_phone
+from scheduling import booking_days
 
 ROOT = Path(__file__).resolve().parent
 BUTTON_DEFAULTS = {
@@ -26,6 +27,7 @@ BUTTON_DEFAULTS = {
     'ADMIN_REQUESTS': 'Заявки и телефоны',
     'BACK': '← Назад',
     'FORWARD': 'Далее →',
+    'CHANGE_DATE': 'Выбрать другую дату',
 }
 
 
@@ -162,7 +164,8 @@ async def message(update, context):
             title = 'Заявка обновлена' if existing else 'Новая заявка'
             await notify(context, f'{title} №{request_id}\n{user["name"]} (ID {uid})\nТелефон: {row["phone"]}\nПроблема и модель: {row["problem"]}')
             result = 'Заявка обновлена' if existing else 'Заявка сохранена'
-            await msg.reply_text(f'Спасибо! {result}. Выберите раздел меню.', reply_markup=MENU)
+            await msg.reply_text(f'Спасибо! {result}. Теперь выберите дату и время визита мастера.', reply_markup=ReplyKeyboardRemove())
+            await show_dates(msg, uid, context)
         elif text:
             if len(text) > 2000:
                 await msg.reply_text('Сократите описание до 2000 символов.')
@@ -182,17 +185,81 @@ async def message(update, context):
         db.clear_draft(uid)
         await msg.reply_text(PROMPT, reply_markup=NEXT)
     elif text == BUTTONS['BOOKING']:
-        db.stage(uid, 'booking')
-        await msg.reply_text('Укажите желаемые дату и время визита мастера. Администратор свяжется с вами для подтверждения.\nДля отмены нажмите /cancel.')
-    elif stage == 'booking':
-        if not text or len(text) > 500:
-            await msg.reply_text('Укажите дату и время текстом, до 500 символов.')
-            return
-        db.book(uid, text)
-        await notify(context, f'Запрос на запись\n{user["name"]} (ID {uid})\nТелефон: {user["phone"]}\nЖелаемое время: {text}')
-        await msg.reply_text('Пожелание сохранено. Запись будет действительна после подтверждения мастером.', reply_markup=MENU)
+        await msg.reply_text('Выберите дату и время визита мастера.', reply_markup=ReplyKeyboardRemove())
+        await show_dates(msg, uid, context)
+    elif stage in ('booking', 'booking_date', 'booking_time'):
+        if stage == 'booking_time' and db.selected_day(uid) in booking_days():
+            await show_times(msg, uid, db.selected_day(uid), context)
+        else:
+            await show_dates(msg, uid, context)
+
     else:
         await msg.reply_text('Выберите раздел меню.', reply_markup=MENU)
+
+
+async def show_dates(msg, uid, context):
+    db = store(context)
+    db.begin_booking(uid)
+    buttons = [[InlineKeyboardButton(datetime.fromisoformat(day).strftime('%d.%m.%Y'), callback_data=f'book:day:{day}')]
+               for day in booking_days()]
+    await msg.reply_text('Выберите дату визита (время московское). Отмена: /cancel.',
+                         reply_markup=InlineKeyboardMarkup(buttons))
+
+
+async def show_times(msg, uid, day, context):
+    clocks = store(context).available_times(day, uid)
+    buttons = [InlineKeyboardButton(clock, callback_data=f'book:slot:{day}:{clock}') for clock in clocks]
+    rows = [buttons[i:i+2] for i in range(0, len(buttons), 2)]
+    rows.append([InlineKeyboardButton(BUTTONS['CHANGE_DATE'], callback_data='book:dates')])
+    caption = f'{datetime.fromisoformat(day):%d.%m.%Y}: выберите свободное время (МСК).'
+    if not clocks:
+        caption = 'На эту дату свободного времени нет. Выберите другую дату.'
+    await msg.reply_text(caption, reply_markup=InlineKeyboardMarkup(rows))
+
+
+async def booking_callback(update, context):
+    query = update.callback_query
+    uid = query.from_user.id
+    db = store(context)
+    user = db.user(uid)
+    if not user or not db.latest(uid):
+        await query.answer('Сначала заполните анкету через /start.', show_alert=True)
+        return
+    if user['stage'] not in ('booking', 'booking_date', 'booking_time'):
+        await query.answer('Эта кнопка устарела. Откройте «Запись» в меню.', show_alert=True)
+        return
+    await query.answer()
+    if query.data == 'book:dates':
+        await show_dates(query.message, uid, context)
+        return
+    parts = query.data.split(':')
+    day = parts[2]
+    if day not in booking_days():
+        await show_dates(query.message, uid, context)
+        return
+    if parts[1] == 'day':
+        db.select_day(uid, day)
+        await show_times(query.message, uid, day, context)
+        return
+    if user['stage'] != 'booking_time' or db.selected_day(uid) != day:
+        await query.message.reply_text('Выберите дату заново.')
+        await show_dates(query.message, uid, context)
+        return
+    clock = ':'.join(parts[3:])
+    try:
+        booking = db.book(uid, day, clock)
+    except (SlotUnavailable, ValueError) as error:
+        await query.message.reply_text(str(error))
+        await show_times(query.message, uid, day, context)
+        return
+    try:
+        await query.edit_message_reply_markup(reply_markup=None)
+    except TelegramError:
+        # Запись уже сохранена; ошибка старого сообщения не отменяет уведомления.
+        pass
+    row = db.latest(uid)
+    await notify(context, f'Запись к мастеру, заявка №{row["id"]}\n{user["name"]} (ID {uid})\nТелефон: {user["phone"]}\nДата и время: {booking} МСК\nПроблема: {row["problem"]}')
+    await query.message.reply_text(f'Вы записаны на {booking} (МСК). Выберите раздел меню.', reply_markup=MENU)
 
 
 async def cancel(update, context):
@@ -250,6 +317,7 @@ def main():
     app.add_handler(CommandHandler('myid', myid, filters.ChatType.PRIVATE))
     app.add_handler(CommandHandler('admin', admin, filters.ChatType.PRIVATE))
     app.add_handler(CommandHandler('cancel', cancel, filters.ChatType.PRIVATE))
+    app.add_handler(CallbackQueryHandler(booking_callback, pattern=r'^book:(?:dates|day:\d{4}-\d{2}-\d{2}|slot:\d{4}-\d{2}-\d{2}:\d{2}:00)$'))
     app.add_handler(CallbackQueryHandler(admin_page, pattern=r'^admin:(visits|requests):\d+$'))
     app.add_handler(MessageHandler(filters.ChatType.PRIVATE & ~filters.COMMAND, message))
     app.add_error_handler(error_handler)

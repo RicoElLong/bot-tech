@@ -1,4 +1,7 @@
 import sqlite3
+from datetime import datetime
+from scheduling import MOSCOW, booking_days, TIMES
+from storage import SlotUnavailable
 import tempfile
 import unittest
 from types import SimpleNamespace
@@ -11,6 +14,10 @@ from storage import Store
 
 class FlowTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
+        for target in ('scheduling.local_now', 'storage.local_now'):
+            timer = patch(target, return_value=datetime(2030, 1, 1, 7, 0, tzinfo=MOSCOW))
+            timer.start()
+            self.addCleanup(timer.stop)
         self.temp = tempfile.TemporaryDirectory()
         self.path = Path(self.temp.name) / 'test.sqlite3'
         self.db = Store(self.path)
@@ -30,6 +37,17 @@ class FlowTests(unittest.IsolatedAsyncioTestCase):
         self.msg.text = text
         await message(self.update, self.context)
 
+    async def click(self, data):
+        query = SimpleNamespace(from_user=self.user, data=data, message=self.msg,
+                                answer=AsyncMock(), edit_message_reply_markup=AsyncMock())
+        await bot.booking_callback(SimpleNamespace(callback_query=query), self.context)
+        return query
+
+    async def choose(self, clock='10:00', day=None):
+        day = day or booking_days()[0]
+        await self.click(f'book:day:{day}')
+        await self.click(f'book:slot:{day}:{clock}')
+
     async def test_full_flow_and_restart(self):
         await self.send('не телефон')
         self.assertEqual(self.db.user(12)['stage'], 'phone')
@@ -44,8 +62,8 @@ class FlowTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.db.latest(12)['problem'], 'Bosch, не сливает воду')
         self.assertIn('+79991234567', self.context.bot.send_message.call_args.args[1])
         await self.send('Запись')
-        await self.send('Завтра после 18:00')
-        self.assertEqual(self.db.latest(12)['booking'], 'Завтра после 18:00')
+        await self.choose('18:00')
+        self.assertEqual(self.db.latest(12)['booking'], '01.01.2030 18:00')
         self.assertEqual(self.db.user(12)['stage'], 'menu')
 
     async def test_skip_problem(self):
@@ -59,7 +77,7 @@ class FlowTests(unittest.IsolatedAsyncioTestCase):
         await self.send('Далее')
         first = dict(self.db.latest(12))
         await self.send('Запись')
-        await self.send('Завтра в 12:00')
+        await self.choose('12:00')
         await self.send('Поломка')
         await self.send('Теперь не набирает воду')
         self.assertEqual(self.db.latest(12)['problem'], 'Первая проблема')
@@ -68,7 +86,7 @@ class FlowTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(row['id'], first['id'])
         self.assertEqual(row['created'], first['created'])
         self.assertEqual(row['problem'], 'Теперь не набирает воду')
-        self.assertEqual(row['booking'], 'Завтра в 12:00')
+        self.assertEqual(row['booking'], '01.01.2030 12:00')
         self.assertEqual(self.db.counts()[2], 1)
         self.assertIn('Заявка обновлена', self.context.bot.send_message.call_args.args[1])
         await self.send('Поломка')
@@ -158,7 +176,7 @@ class FlowTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.db.latest(99)['problem'], 'Не сливает воду')
         await admin(self.update, self.context)
         self.assertIn('Админ-панель', self.msg.reply_text.call_args.args[0])
-        self.assertEqual(self.db.user(99)['stage'], 'menu')
+        self.assertEqual(self.db.user(99)['stage'], 'booking_date')
 
     async def test_custom_buttons_route_to_actions(self):
         self.addCleanup(bot.configure_buttons)
@@ -171,10 +189,81 @@ class FlowTests(unittest.IsolatedAsyncioTestCase):
             await self.send('Продолжить')
             self.assertEqual(self.db.latest(12)['problem'], 'Не отжимает')
             await self.send('Вызвать мастера')
-            self.assertEqual(self.db.user(12)['stage'], 'booking')
-            await self.send('Понедельник, 10:00')
-            self.assertEqual(self.db.latest(12)['booking'], 'Понедельник, 10:00')
+            self.assertEqual(self.db.user(12)['stage'], 'booking_date')
+            await self.choose('10:00')
+            self.assertEqual(self.db.latest(12)['booking'], '01.01.2030 10:00')
         bot.configure_buttons()
+
+    async def test_booking_follows_problem_and_remembers_busy_slots_after_restart(self):
+        await self.send('89991234567')
+        await self.send('Не греет воду')
+        await self.send('Далее')
+        self.assertEqual(self.db.user(12)['stage'], 'booking_date')
+        await self.click('book:day:2030-01-01')
+        markup = self.msg.reply_text.call_args.kwargs['reply_markup']
+        clocks = [button.text for row in markup.inline_keyboard for button in row][:-1]
+        self.assertEqual(clocks, list(TIMES))
+        await self.choose('08:00')
+        self.assertIn('08:00', self.db.latest(12)['booking'])
+        self.db.db.close()
+        self.db = Store(self.path)
+        self.context.application.bot_data['store'] = self.db
+        self.user.id = 13
+        self.db.visit(self.user)
+        await self.send('+79991234568')
+        await self.send('Не сливает')
+        await self.send('Далее')
+        await self.click('book:day:2030-01-01')
+        markup = self.msg.reply_text.call_args.kwargs['reply_markup']
+        clocks = [button.text for row in markup.inline_keyboard for button in row]
+        self.assertNotIn('08:00', clocks)
+        self.assertIn('10:00', clocks)
+        self.assertIn('08:00', self.db.available_times('2030-01-02', 13))
+
+    async def test_busy_stale_callback_cannot_overwrite_another_client(self):
+        await self.send('89991234567')
+        await self.send('Проблема первого')
+        await self.send('Далее')
+        await self.click('book:day:2030-01-01')
+        self.user.id = 13
+        self.db.visit(self.user)
+        await self.send('89991234568')
+        await self.send('Проблема второго')
+        await self.send('Далее')
+        await self.choose('10:00')
+        self.user.id = 12
+        await self.click('book:slot:2030-01-01:10:00')
+        self.assertIsNone(self.db.latest(12)['booking'])
+        self.assertEqual(self.db.latest(13)['booking'], '01.01.2030 10:00')
+        await self.choose('12:00')
+        # Перенос на занятое время не должен отменять прежнюю запись.
+        other = Store(self.path)
+        try:
+            with self.assertRaises(SlotUnavailable):
+                other.book(12, '2030-01-01', '10:00')
+            self.assertEqual(other.latest(12)['booking'], '01.01.2030 12:00')
+        finally:
+            other.db.close()
+        await self.send('Запись')
+        await self.choose('14:00')
+        self.assertIn('12:00', self.db.available_times('2030-01-01', 13))
+        self.assertNotIn('14:00', self.db.available_times('2030-01-01', 13))
+        self.assertEqual(self.db.db.execute('SELECT COUNT(*) FROM appointments').fetchone()[0], 3)
+        # Повторное нажатие старой кнопки не меняет подтверждённое время.
+        query = await self.click('book:slot:2030-01-01:16:00')
+        self.assertTrue(query.answer.call_args.kwargs['show_alert'])
+        self.assertIn('14:00', self.db.latest(12)['booking'])
+
+    async def test_past_and_invalid_times_are_rejected(self):
+        await self.send('89991234567')
+        await self.send('Далее')
+        with self.assertRaises(ValueError):
+            self.db.book(12, '2029-12-31', '08:00')
+        with self.assertRaises(ValueError):
+            self.db.book(12, '2030-01-01', '09:00')
+        with patch('storage.local_now', return_value=datetime(2030, 1, 1, 11, 0, tzinfo=MOSCOW)):
+            self.assertNotIn('10:00', self.db.available_times('2030-01-01', 12))
+        self.assertIsNone(self.db.latest(12)['booking'])
 
     def test_phone_validation(self):
         for value in ['123', 'hello1234567890', '+1234567890123456', '']:

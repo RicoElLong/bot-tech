@@ -2,6 +2,7 @@ import re
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
+from scheduling import TIMES, local_now, validate_slot, slot_start
 
 
 def now():
@@ -14,6 +15,10 @@ def canonical_phone(phone):
     if len(digits) == 11 and digits.startswith('8'):
         digits = '7' + digits[1:]
     return '+' + digits
+
+
+class SlotUnavailable(ValueError):
+    pass
 
 
 class Store:
@@ -32,6 +37,15 @@ class Store:
             CREATE TABLE IF NOT EXISTS requests (
                 id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL, phone TEXT NOT NULL,
                 problem TEXT NOT NULL, created TEXT NOT NULL, booking TEXT);
+            CREATE TABLE IF NOT EXISTS booking_selections (user_id INTEGER PRIMARY KEY, day TEXT NOT NULL);
+            CREATE TABLE IF NOT EXISTS appointments (
+                id INTEGER PRIMARY KEY, request_id INTEGER NOT NULL,
+                day TEXT NOT NULL, clock TEXT NOT NULL,
+                created TEXT NOT NULL, cancelled TEXT);
+            CREATE UNIQUE INDEX IF NOT EXISTS appointments_slot_unique
+                ON appointments(day,clock) WHERE cancelled IS NULL;
+            CREATE UNIQUE INDEX IF NOT EXISTS appointments_request_unique
+                ON appointments(request_id) WHERE cancelled IS NULL;
         ''')
         self.db.commit()
         self._migrate_requests()
@@ -95,7 +109,8 @@ class Store:
                     problem=CASE WHEN ? THEN excluded.problem ELSE requests.problem END
                 RETURNING id""",
                 (uid, canonical_phone(self.user(uid)['phone']), problem, now(), draft is not None)).fetchone()
-            self.db.execute("UPDATE users SET stage='menu' WHERE id=?", (uid,))
+            self.db.execute("UPDATE users SET stage='booking_date' WHERE id=?", (uid,))
+            self.db.execute("DELETE FROM booking_selections WHERE user_id=?", (uid,))
             self.db.execute("DELETE FROM drafts WHERE user_id=?", (uid,))
             return row[0]
 
@@ -105,10 +120,48 @@ class Store:
             return None
         return self.db.execute('SELECT * FROM requests WHERE phone=?', (canonical_phone(user['phone']),)).fetchone()
 
-    def book(self, uid, text):
+    def begin_booking(self, uid):
         with self.db:
-            self.db.execute('UPDATE requests SET booking=? WHERE id=?', (text, self.latest(uid)['id']))
-            self.db.execute("UPDATE users SET stage='menu' WHERE id=?", (uid,))
+            self.db.execute("DELETE FROM booking_selections WHERE user_id=?", (uid,))
+            self.db.execute("UPDATE users SET stage='booking_date' WHERE id=?", (uid,))
+
+    def select_day(self, uid, day):
+        with self.db:
+            self.db.execute('INSERT OR REPLACE INTO booking_selections VALUES(?,?)', (uid, day))
+            self.db.execute("UPDATE users SET stage='booking_time' WHERE id=?", (uid,))
+
+    def selected_day(self, uid):
+        row = self.db.execute('SELECT day FROM booking_selections WHERE user_id=?', (uid,)).fetchone()
+        return row['day'] if row else None
+
+    def available_times(self, day, uid):
+        request = self.latest(uid)
+        request_id = request['id'] if request else -1
+        occupied = {row['clock'] for row in self.db.execute(
+            'SELECT clock FROM appointments WHERE day=? AND cancelled IS NULL AND request_id<>?',
+            (day, request_id))}
+        return [clock for clock in TIMES if clock not in occupied and slot_start(day, clock) > local_now()]
+
+    def book(self, uid, day, clock):
+        validate_slot(day, clock)
+        request = self.latest(uid)
+        if not request:
+            raise ValueError('Сначала заполните заявку.')
+        booking = f'{datetime.fromisoformat(day):%d.%m.%Y} {clock}'
+        try:
+            with self.db:
+                # UNIQUE-индекс не позволит двум клиентам занять один слот.
+                # При конфликте транзакция сохраняет прежнюю запись клиента.
+                self.db.execute('UPDATE appointments SET cancelled=? WHERE request_id=? AND cancelled IS NULL',
+                                (now(), request['id']))
+                self.db.execute('INSERT INTO appointments(request_id,day,clock,created) VALUES(?,?,?,?)',
+                                (request['id'], day, clock, now()))
+                self.db.execute('UPDATE requests SET booking=? WHERE id=?', (booking, request['id']))
+                self.db.execute("UPDATE users SET stage='menu' WHERE id=?", (uid,))
+                self.db.execute('DELETE FROM booking_selections WHERE user_id=?', (uid,))
+        except sqlite3.IntegrityError as error:
+            raise SlotUnavailable('Это время уже занято. Выберите другое.') from error
+        return booking
 
     def page(self, kind, page, limit=5):
         queries = {

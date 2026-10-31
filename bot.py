@@ -1,0 +1,227 @@
+import logging
+import os
+import re
+from datetime import datetime
+from pathlib import Path
+from zoneinfo import ZoneInfo
+
+from dotenv import load_dotenv
+from telegram import (BotCommand, BotCommandScopeChat, InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton,
+                      ReplyKeyboardMarkup, Update)
+from telegram.error import TelegramError
+from telegram.ext import (Application, CallbackQueryHandler, CommandHandler,
+                          ContextTypes, MessageHandler, filters)
+from storage import Store
+
+ROOT = Path(__file__).resolve().parent
+MENU = ReplyKeyboardMarkup([['Поломка', 'Запись'], ['Контакты', 'Отзывы']], resize_keyboard=True)
+NEXT = ReplyKeyboardMarkup([['Далее']], resize_keyboard=True)
+PHONE = ReplyKeyboardMarkup([[KeyboardButton('Отправить телефон', request_contact=True)]], resize_keyboard=True)
+PROMPT = 'Укажите по возможности, какая проблема вас беспокоит и модель стиральной машины.\n\nНапишите одним сообщением. Затем нажмите «Далее». Можно пропустить описание кнопкой «Далее».'
+
+
+def normalize_phone(text):
+    if not re.fullmatch(r'\+?[\d\s()\-]+', text.strip()):
+        return None
+    digits = re.sub(r'\D', '', text)
+    return ('+' if text.strip().startswith('+') else '') + digits if 10 <= len(digits) <= 15 else None
+
+
+def store(context):
+    return context.application.bot_data['store']
+
+
+def is_admin(uid, context):
+    return uid in context.application.bot_data['admins']
+
+
+async def notify(context, text):
+    for uid in context.application.bot_data['admins']:
+        try:
+            await context.bot.send_message(uid, text)
+        except TelegramError:
+            # Заявка уже сохранена в SQLite и доступна через /admin.
+            logging.getLogger(__name__).warning('Не удалось доставить уведомление администратору %s', uid)
+
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if is_admin(update.effective_user.id, context):
+        await admin(update, context)
+        return
+    db = store(context)
+    db.visit(update.effective_user)
+    user = db.user(update.effective_user.id)
+    await notify(context, f'Вход в бот: {user["name"]} (ID {user["id"]})\nВремя: {display_time(user["last_seen"])}')
+    db.stage(user['id'], 'phone')
+    db.clear_draft(user['id'])
+    caption = 'Добро пожаловать, укажите пожалуйста свой телефон, это необходимо для обратной связи с мастером.\n\nНажмите кнопку или введите номер текстом. Отправляя данные, вы передаёте их администратору сервиса для связи по ремонту.\n/myid — ваш Telegram ID'
+    photo = Path(os.getenv('WELCOME_PHOTO', 'assets/welcome.png'))
+    if not photo.is_absolute():
+        photo = ROOT / photo
+    with photo.open('rb') as stream:
+        await update.message.reply_photo(stream, caption=caption, reply_markup=PHONE)
+
+
+async def myid(update, context):
+    await update.message.reply_text(f'Ваш Telegram ID: {update.effective_user.id}')
+
+
+def display_time(value):
+    return datetime.fromisoformat(value).astimezone(ZoneInfo('Europe/Moscow')).strftime('%d.%m.%Y %H:%M МСК')
+
+
+async def admin(update, context):
+    if not is_admin(update.effective_user.id, context):
+        await update.message.reply_text('Доступ только для администратора.')
+        return
+    users, visits, requests = store(context).counts()
+    await update.message.reply_text(f'Админ-панель\nКлиентов: {users}\nВходов через /start: {visits}\nЗаявок: {requests}', reply_markup=InlineKeyboardMarkup([
+        [InlineKeyboardButton('Кто и когда заходил', callback_data='admin:visits:0')],
+        [InlineKeyboardButton('Заявки и телефоны', callback_data='admin:requests:0')]]))
+
+
+async def admin_page(update, context):
+    query = update.callback_query
+    if not is_admin(query.from_user.id, context):
+        await query.answer('Доступ запрещён', show_alert=True)
+        return
+    await query.answer()
+    _, kind, raw_page = query.data.split(':')
+    page = int(raw_page)
+    limit = 1 if kind == 'requests' else 5
+    rows = store(context).page(kind, page, limit)
+    entries = []
+    for row in rows[:limit]:
+        text = f'{display_time(row["created"])}\n{row["name"]} (ID {row["user_id"] if kind == "requests" else row["id"]})'
+        if kind == 'requests':
+            text += f'\nЗаявка №{row["id"]}\nТелефон: {row["phone"]}\nПроблема: {row["problem"]}\nЗапись: {(row["booking"] or "не указана")}'
+        entries.append(text)
+    buttons = []
+    if page:
+        buttons.append(InlineKeyboardButton('← Назад', callback_data=f'admin:{kind}:{page-1}'))
+    if len(rows) > limit:
+        buttons.append(InlineKeyboardButton('Далее →', callback_data=f'admin:{kind}:{page+1}'))
+    await query.edit_message_text('\n\n'.join(entries) or 'Пока нет записей.', reply_markup=InlineKeyboardMarkup([buttons]) if buttons else None)
+
+
+async def message(update, context):
+    if update.effective_chat.type != 'private':
+        return
+    msg, uid = update.message, update.effective_user.id
+    db = store(context)
+    user = db.user(uid)
+    if not user:
+        await msg.reply_text('Для начала нажмите /start.')
+        return
+    text = (msg.text or '').strip()
+    stage = user['stage']
+    if stage == 'phone':
+        if msg.contact and msg.contact.user_id != uid:
+            await msg.reply_text('Пожалуйста, отправьте свой контакт кнопкой ниже.', reply_markup=PHONE)
+            return
+        phone = normalize_phone(msg.contact.phone_number if msg.contact else text)
+        if not phone:
+            await msg.reply_text('Введите телефон из 10–15 цифр, например +79991234567, или нажмите кнопку.', reply_markup=PHONE)
+            return
+        db.phone(uid, phone)
+        await msg.reply_text(PROMPT, reply_markup=NEXT)
+    elif stage == 'problem':
+        if text == 'Далее':
+            request_id = db.submit(uid)
+            row = db.latest(uid)
+            await notify(context, f'Новая заявка №{request_id}\n{user["name"]} (ID {uid})\nТелефон: {row["phone"]}\nПроблема и модель: {row["problem"]}')
+            await msg.reply_text('Спасибо! Заявка сохранена. Выберите раздел меню.', reply_markup=MENU)
+        elif text:
+            if len(text) > 2000:
+                await msg.reply_text('Сократите описание до 2000 символов.')
+                return
+            db.draft(uid, text)
+            await msg.reply_text('Описание принято. Нажмите «Далее», чтобы отправить заявку.', reply_markup=NEXT)
+        else:
+            await msg.reply_text('Опишите проблему текстом или нажмите «Далее».', reply_markup=NEXT)
+    elif text == 'Контакты':
+        await msg.reply_text(os.getenv('CONTACTS_TEXT', 'Контакты сервиса пока не заполнены.'), reply_markup=MENU)
+    elif text == 'Отзывы':
+        url = os.getenv('REVIEWS_URL', '')
+        markup = InlineKeyboardMarkup([[InlineKeyboardButton('Открыть отзывы', url=url)]]) if url.startswith('https://') else MENU
+        await msg.reply_text(os.getenv('REVIEWS_TEXT', 'Отзывы пока не добавлены.'), reply_markup=markup)
+    elif text == 'Поломка':
+        db.stage(uid, 'problem')
+        db.clear_draft(uid)
+        await msg.reply_text(PROMPT, reply_markup=NEXT)
+    elif text == 'Запись':
+        db.stage(uid, 'booking')
+        await msg.reply_text('Укажите желаемые дату и время визита мастера. Администратор свяжется с вами для подтверждения.\nДля отмены нажмите /cancel.')
+    elif stage == 'booking':
+        if not text or len(text) > 500:
+            await msg.reply_text('Укажите дату и время текстом, до 500 символов.')
+            return
+        db.book(uid, text)
+        await notify(context, f'Запрос на запись\n{user["name"]} (ID {uid})\nТелефон: {user["phone"]}\nЖелаемое время: {text}')
+        await msg.reply_text('Пожелание сохранено. Запись будет действительна после подтверждения мастером.', reply_markup=MENU)
+    else:
+        await msg.reply_text('Выберите раздел меню.', reply_markup=MENU)
+
+
+async def cancel(update, context):
+    db = store(context)
+    uid = update.effective_user.id
+    if db.latest(uid):
+        db.stage(uid, 'menu')
+        db.clear_draft(uid)
+        await update.message.reply_text('Вы вернулись в меню.', reply_markup=MENU)
+    else:
+        await update.message.reply_text('Сначала завершите анкету. Начать заново: /start.')
+
+
+async def error_handler(update, context):
+    logging.getLogger(__name__).error('Ошибка обработки: %s', type(context.error).__name__)
+    if isinstance(update, Update) and update.effective_message:
+        try:
+            await update.effective_message.reply_text('Не удалось выполнить действие. Попробуйте ещё раз или нажмите /start.')
+        except TelegramError:
+            pass
+
+
+async def configure_commands(application):
+    await application.bot.set_my_commands([
+        BotCommand('start', 'Начать заявку'),
+        BotCommand('myid', 'Мой Telegram ID'),
+    ])
+    for uid in application.bot_data['admins']:
+        try:
+            await application.bot.set_my_commands([
+                BotCommand('admin', 'Админ-панель'),
+                BotCommand('myid', 'Мой Telegram ID'),
+            ], scope=BotCommandScopeChat(uid))
+        except TelegramError:
+            logging.getLogger(__name__).warning(
+                'Не удалось настроить меню администратора %s. Откройте чат с ботом и перезапустите его.', uid)
+
+
+def main():
+    load_dotenv(ROOT / '.env')
+    token = os.getenv('BOT_TOKEN', '').strip()
+    admins = {int(value.strip()) for value in os.getenv('ADMIN_IDS', '').split(',') if value.strip()}
+    if not token:
+        raise SystemExit('Укажите BOT_TOKEN в .env (см. .env.example).')
+    if not admins:
+        logging.warning('ADMIN_IDS не заполнен: уведомления администраторам отключены. Получите ID командой /myid.')
+    path = Path(os.getenv('DATABASE_PATH', 'data/bot.sqlite3'))
+    if not path.is_absolute():
+        path = ROOT / path
+    app = Application.builder().token(token).post_init(configure_commands).build()
+    app.bot_data.update(store=Store(path), admins=admins)
+    app.add_handler(CommandHandler('start', start, filters.ChatType.PRIVATE))
+    app.add_handler(CommandHandler('myid', myid, filters.ChatType.PRIVATE))
+    app.add_handler(CommandHandler('admin', admin, filters.ChatType.PRIVATE))
+    app.add_handler(CommandHandler('cancel', cancel, filters.ChatType.PRIVATE))
+    app.add_handler(CallbackQueryHandler(admin_page, pattern=r'^admin:(visits|requests):\d+$'))
+    app.add_handler(MessageHandler(filters.ChatType.PRIVATE & ~filters.COMMAND, message))
+    app.add_error_handler(error_handler)
+    app.run_polling(allowed_updates=['message', 'callback_query'])
+
+
+if __name__ == '__main__':
+    logging.basicConfig(level=logging.WARNING)
+    main()

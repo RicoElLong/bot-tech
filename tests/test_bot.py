@@ -1,7 +1,8 @@
 import tempfile
 import unittest
 from types import SimpleNamespace
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
+import bot
 from pathlib import Path
 from bot import message, admin, admin_page, normalize_phone
 from storage import Store
@@ -65,6 +66,22 @@ class FlowTests(unittest.IsolatedAsyncioTestCase):
         self.user.id = 99
         await admin(self.update, self.context)
         self.assertIn('Админ-панель', self.msg.reply_text.call_args.args[0])
+
+    async def test_custom_buttons_route_to_actions(self):
+        self.addCleanup(bot.configure_buttons)
+        with patch.dict('os.environ', {'BUTTON_NEXT': 'Продолжить', 'BUTTON_BOOKING': 'Вызвать мастера'}):
+            bot.configure_buttons()
+            await self.send('89991234567')
+            self.assertIn('Продолжить', self.msg.reply_text.call_args.args[0])
+            self.assertEqual(bot.NEXT.keyboard[0][0].text, 'Продолжить')
+            await self.send('Не отжимает')
+            await self.send('Продолжить')
+            self.assertEqual(self.db.latest(12)['problem'], 'Не отжимает')
+            await self.send('Вызвать мастера')
+            self.assertEqual(self.db.user(12)['stage'], 'booking')
+            await self.send('Понедельник, 10:00')
+            self.assertEqual(self.db.latest(12)['booking'], 'Понедельник, 10:00')
+        bot.configure_buttons()
 
     def test_phone_validation(self):
         for value in ['123', 'hello1234567890', '+1234567890123456', '']:

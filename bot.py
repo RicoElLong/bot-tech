@@ -14,10 +14,42 @@ from telegram.ext import (Application, CallbackQueryHandler, CommandHandler,
 from storage import Store
 
 ROOT = Path(__file__).resolve().parent
-MENU = ReplyKeyboardMarkup([['Поломка', 'Запись'], ['Контакты', 'Отзывы']], resize_keyboard=True)
-NEXT = ReplyKeyboardMarkup([['Далее']], resize_keyboard=True)
-PHONE = ReplyKeyboardMarkup([[KeyboardButton('Отправить телефон', request_contact=True)]], resize_keyboard=True)
-PROMPT = 'Укажите по возможности, какая проблема вас беспокоит и модель стиральной машины.\n\nНапишите одним сообщением. Затем нажмите «Далее». Можно пропустить описание кнопкой «Далее».'
+BUTTON_DEFAULTS = {
+    'PHONE': 'Отправить телефон',
+    'NEXT': 'Далее',
+    'BREAKDOWN': 'Поломка',
+    'BOOKING': 'Запись',
+    'CONTACTS': 'Контакты',
+    'REVIEWS': 'Отзывы',
+    'OPEN_REVIEWS': 'Открыть отзывы',
+    'ADMIN_VISITS': 'Кто и когда заходил',
+    'ADMIN_REQUESTS': 'Заявки и телефоны',
+    'BACK': '← Назад',
+    'FORWARD': 'Далее →',
+}
+
+
+def configure_buttons():
+    global BUTTONS, MENU, NEXT, PHONE, PROMPT
+    BUTTONS = {key: os.getenv('BUTTON_' + key, default).strip() or default
+               for key, default in BUTTON_DEFAULTS.items()}
+    if any(len(value) > 64 for value in BUTTONS.values()):
+        raise ValueError('Названия кнопок должны содержать не более 64 символов.')
+    menu_keys = ['BREAKDOWN', 'BOOKING', 'CONTACTS', 'REVIEWS']
+    if len({BUTTONS[key] for key in menu_keys}) != len(menu_keys):
+        raise ValueError('Названия четырёх кнопок меню должны различаться.')
+    MENU = ReplyKeyboardMarkup([
+        [BUTTONS['BREAKDOWN'], BUTTONS['BOOKING']],
+        [BUTTONS['CONTACTS'], BUTTONS['REVIEWS']],
+    ], resize_keyboard=True)
+    NEXT = ReplyKeyboardMarkup([[BUTTONS['NEXT']]], resize_keyboard=True)
+    PHONE = ReplyKeyboardMarkup([[KeyboardButton(BUTTONS['PHONE'], request_contact=True)]], resize_keyboard=True)
+    PROMPT = ('Укажите по возможности, какая проблема вас беспокоит и модель стиральной машины.\n\n'
+              f'Напишите одним сообщением. Затем нажмите «{BUTTONS["NEXT"]}». '
+              f'Можно пропустить описание кнопкой «{BUTTONS["NEXT"]}».')
+
+
+configure_buttons()
 
 
 def normalize_phone(text):
@@ -76,8 +108,8 @@ async def admin(update, context):
         return
     users, visits, requests = store(context).counts()
     await update.message.reply_text(f'Админ-панель\nКлиентов: {users}\nВходов через /start: {visits}\nЗаявок: {requests}', reply_markup=InlineKeyboardMarkup([
-        [InlineKeyboardButton('Кто и когда заходил', callback_data='admin:visits:0')],
-        [InlineKeyboardButton('Заявки и телефоны', callback_data='admin:requests:0')]]))
+        [InlineKeyboardButton(BUTTONS['ADMIN_VISITS'], callback_data='admin:visits:0')],
+        [InlineKeyboardButton(BUTTONS['ADMIN_REQUESTS'], callback_data='admin:requests:0')]]))
 
 
 async def admin_page(update, context):
@@ -98,9 +130,9 @@ async def admin_page(update, context):
         entries.append(text)
     buttons = []
     if page:
-        buttons.append(InlineKeyboardButton('← Назад', callback_data=f'admin:{kind}:{page-1}'))
+        buttons.append(InlineKeyboardButton(BUTTONS['BACK'], callback_data=f'admin:{kind}:{page-1}'))
     if len(rows) > limit:
-        buttons.append(InlineKeyboardButton('Далее →', callback_data=f'admin:{kind}:{page+1}'))
+        buttons.append(InlineKeyboardButton(BUTTONS['FORWARD'], callback_data=f'admin:{kind}:{page+1}'))
     await query.edit_message_text('\n\n'.join(entries) or 'Пока нет записей.', reply_markup=InlineKeyboardMarkup([buttons]) if buttons else None)
 
 
@@ -126,7 +158,7 @@ async def message(update, context):
         db.phone(uid, phone)
         await msg.reply_text(PROMPT, reply_markup=NEXT)
     elif stage == 'problem':
-        if text == 'Далее':
+        if text == BUTTONS['NEXT']:
             request_id = db.submit(uid)
             row = db.latest(uid)
             await notify(context, f'Новая заявка №{request_id}\n{user["name"]} (ID {uid})\nТелефон: {row["phone"]}\nПроблема и модель: {row["problem"]}')
@@ -136,20 +168,20 @@ async def message(update, context):
                 await msg.reply_text('Сократите описание до 2000 символов.')
                 return
             db.draft(uid, text)
-            await msg.reply_text('Описание принято. Нажмите «Далее», чтобы отправить заявку.', reply_markup=NEXT)
+            await msg.reply_text(f'Описание принято. Нажмите «{BUTTONS["NEXT"]}», чтобы отправить заявку.', reply_markup=NEXT)
         else:
-            await msg.reply_text('Опишите проблему текстом или нажмите «Далее».', reply_markup=NEXT)
-    elif text == 'Контакты':
+            await msg.reply_text(f'Опишите проблему текстом или нажмите «{BUTTONS["NEXT"]}».', reply_markup=NEXT)
+    elif text == BUTTONS['CONTACTS']:
         await msg.reply_text(os.getenv('CONTACTS_TEXT', 'Контакты сервиса пока не заполнены.'), reply_markup=MENU)
-    elif text == 'Отзывы':
+    elif text == BUTTONS['REVIEWS']:
         url = os.getenv('REVIEWS_URL', '')
-        markup = InlineKeyboardMarkup([[InlineKeyboardButton('Открыть отзывы', url=url)]]) if url.startswith('https://') else MENU
+        markup = InlineKeyboardMarkup([[InlineKeyboardButton(BUTTONS['OPEN_REVIEWS'], url=url)]]) if url.startswith('https://') else MENU
         await msg.reply_text(os.getenv('REVIEWS_TEXT', 'Отзывы пока не добавлены.'), reply_markup=markup)
-    elif text == 'Поломка':
+    elif text == BUTTONS['BREAKDOWN']:
         db.stage(uid, 'problem')
         db.clear_draft(uid)
         await msg.reply_text(PROMPT, reply_markup=NEXT)
-    elif text == 'Запись':
+    elif text == BUTTONS['BOOKING']:
         db.stage(uid, 'booking')
         await msg.reply_text('Укажите желаемые дату и время визита мастера. Администратор свяжется с вами для подтверждения.\nДля отмены нажмите /cancel.')
     elif stage == 'booking':
@@ -200,7 +232,9 @@ async def configure_commands(application):
 
 
 def main():
+    load_dotenv(ROOT / '.env.local')
     load_dotenv(ROOT / '.env')
+    configure_buttons()
     token = os.getenv('BOT_TOKEN', '').strip()
     admins = {int(value.strip()) for value in os.getenv('ADMIN_IDS', '').split(',') if value.strip()}
     if not token:

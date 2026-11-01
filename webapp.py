@@ -15,6 +15,7 @@ import sqlite3
 import time
 from urllib.parse import urlsplit
 from uuid import UUID
+from scheduling import validate_slot
 
 from aiohttp import web
 from telegram import LinkPreviewOptions
@@ -100,7 +101,20 @@ def validated_submission(payload):
     phone = text('phone', 40)
     if not re.fullmatch(r'\+?[0-9 ()-]+', phone) or not 10 <= len(re.sub(r'\D', '', phone)) <= 15:
         raise ValueError('Введите корректный телефон: от 10 до 15 цифр.')
+    preferred_date = text('preferred_date', 10, required=False)
+    preferred_time = text('preferred_time', 5, required=False)
+    if bool(preferred_date) != bool(preferred_time):
+        raise ValueError('Укажите и дату, и время визита.')
+    if preferred_date:
+        try:
+            validate_slot(preferred_date, preferred_time)
+        except (ValueError, OverflowError):
+            raise ValueError('Выбранное время уже прошло или недоступно.') from None
+        if preferred_time not in ('08:00','10:00','12:00','14:00','16:00','18:00'):
+            raise ValueError('Выберите доступное время визита.')
     data = {
+        'preferred_date': preferred_date,
+        'preferred_time': preferred_time,
         'name': text('name', 100),
         'phone': canonical_phone(phone),
         'brand': text('brand', 100),
@@ -119,7 +133,8 @@ def website_notification(row):
     return (f'Новая заявка с сайта Быттех №{row["id"]}\n'
             f'Источник: сайт\nИмя: {row["contact_name"]}\nТелефон: {row["phone"]}\n'
             f'Марка: {row["brand"]}\nПоломка: {row["problem"]}\n'
-            f'Комментарий: {row["comment"] or "—"}\n\nВсе заявки: /admin')
+            f'Комментарий: {row["comment"] or "—"}\n'
+            f'Желаемое время: {row["preferred_date"] or "не указано"} {row["preferred_time"] or ""} (не подтверждено)\n\nВсе заявки: /admin')
 
 
 async def deliver_notifications(db, bot, admins):

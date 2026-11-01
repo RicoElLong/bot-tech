@@ -248,6 +248,78 @@
     *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
     .reveal{opacity:1;transform:none}
   }
+
+/* БытТех: approved responsive header and hero design */
+:root{--blue:#00a9d9;--blue-dark:#007bb4;--blue-light:#e1f5ff;--blue-mid:#9bdaf0}
+.header{background:rgba(255,255,255,.96)}
+.header-inner{position:relative;gap:16px;min-height:76px}
+.logo{gap:0;isolation:isolate}
+.logo-word{font-weight:800;letter-spacing:-.055em}
+.logo-word--byt{font-size:30px;color:#00b3d9}
+.logo-word--teh{font-size:30px;color:#080d17;letter-spacing:-.055em}
+.logo-icon{height:46px;width:46px;margin:0 -2px;overflow:visible}
+.header-nav{gap:20px;font-size:13px}
+.header-phone{font-size:13px}
+.header-cta{font-size:13px;padding:11px 14px;flex-shrink:0}
+.menu-toggle{display:none;align-items:center;justify-content:center;flex-direction:column;gap:5px;width:44px;height:44px;border:0;border-radius:10px;background:#f0f8ff;cursor:pointer}
+.menu-toggle span{width:23px;height:2px;background:#13223a;border-radius:3px}
+.hero{position:relative;isolation:isolate;overflow:hidden;padding:75px 0 40px;background:linear-gradient(115deg,#fff 25%,#f4f9ff 79%,#dcefff)}
+.hero::before{content:"";position:absolute;right:-220px;top:60px;width:770px;height:770px;background:linear-gradient(130deg,#e2f3ff,#90d4ff);border-radius:50%;z-index:-1}
+.hero-grid{grid-template-columns:1.04fr .96fr;gap:15px;min-height:520px;align-items:center}
+.hero-copy{padding:10px 0 50px;position:relative;z-index:2}
+.hero-badge{background:#def4ff;color:#0a4b73;border-radius:100px;font-size:13px;margin-bottom:26px}
+.hero-badge::before{background:#079bd4}
+.hero h1{font-size:clamp(38px,4.5vw,64px);line-height:1.08;letter-spacing:-.05em;color:#101a2f;margin-bottom:25px}
+.hero h1 span{display:block;color:#00aedd}
+.hero-lead{font-size:17px;line-height:1.7;max-width:510px;margin-bottom:30px}
+.hero-cta{margin:0;gap:12px}
+.hero-cta .btn{border-radius:11px}
+.hero-visual{height:100%;min-height:510px;align-items:flex-end;overflow:visible}
+.hero-visual::before{content:"";position:absolute;inset:auto 0 0 2%;height:80%;border-radius:46% 50% 0 0;background:radial-gradient(circle at 70% 40%,rgba(255,255,255,.68),transparent 56%);z-index:-1}
+.hero-visual .hero-photo{display:block;width:auto;max-width:100%;height:min(560px,100%);object-fit:contain;object-position:center bottom;filter:drop-shadow(0 15px 22px rgba(33,62,91,.12))}
+.hero-proof{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin-top:-8px;position:relative;z-index:2}
+.hero-proof-card{min-width:0;display:flex;gap:15px;align-items:center;background:#fff;border:1px solid #e3eef9;box-shadow:0 10px 35px rgba(32,92,138,.08);padding:19px;border-radius:16px}
+.hero-proof-icon{display:grid;place-items:center;width:43px;height:43px;border-radius:12px;background:#e8f6ff;color:#008fd0;font-size:24px;font-weight:800;flex-shrink:0}
+.hero-proof-card strong{display:block;font-size:15px;line-height:1.3;color:#112038}
+.hero-proof-card small{display:block;font-size:12px;line-height:1.45;color:#62758b;margin-top:4px}
+.quiz-section{padding-top:72px;scroll-margin-top:88px}
+@media(max-width:1120px){.header-nav{gap:12px}.header-phone span{display:none}.header-cta{font-size:12px}}
+@media(max-width:900px){
+ .header-inner{min-height:65px;flex-wrap:nowrap}
+ .menu-toggle{display:flex;order:3}
+ .header-phone{margin-left:auto;order:2}
+ .header-cta{display:none}
+ .header-nav{display:none}
+ .header.menu-open .header-nav{display:flex;position:absolute;top:100%;left:0;right:0;flex-direction:column;gap:0;padding:8px 16px;background:#fff;box-shadow:0 18px 24px rgba(14,41,73,.12);border:1px solid #e6eef9;border-radius:0 0 14px 14px}
+ .header.menu-open .header-nav a{padding:14px 8px;min-height:45px;border-bottom:1px solid #f1f5f9}
+ .hero{padding:44px 0 36px}
+ .hero-grid{grid-template-columns:1fr;gap:0;min-height:0}
+ .hero-copy{padding:0}
+ .hero h1{font-size:clamp(38px,7.1vw,58px)}
+ .hero-visual{order:2;max-width:570px;width:100%;min-height:0;height:380px;margin:18px auto 0}
+ .hero-visual .hero-photo{height:100%;width:100%;object-fit:contain;object-position:bottom}
+ .hero-proof{margin-top:16px}
+}
+@media(max-width:600px){
+ .container{padding-left:18px;padding-right:18px}
+ .logo-word--byt,.logo-word--teh{font-size:24px}
+ .logo-icon{width:37px;height:37px;margin:0 -2px}
+ .header-inner{min-height:62px;padding:8px 0}
+ .hero{padding-top:28px;padding-bottom:25px}
+ .hero::before{width:480px;height:480px;top:295px;right:-235px}
+ .hero-badge{font-size:11px;padding:6px 10px;margin-bottom:16px}
+ .hero h1{font-size:clamp(34px,9.5vw,45px);margin-bottom:15px}
+ .hero-lead{font-size:14px;line-height:1.55;margin-bottom:20px}
+ .hero-cta{display:grid;grid-template-columns:1fr;gap:10px}
+ .hero-cta .btn{min-height:46px;padding:12px 18px}
+ .hero-visual{height:345px;max-width:100%;margin-top:12px}
+ .hero-proof{grid-template-columns:1fr;gap:8px}
+ .hero-proof-card{padding:12px 15px;gap:12px}
+ .hero-proof-icon{width:37px;height:37px;font-size:21px}
+ .hero-proof-card strong{font-size:13px}
+ .hero-proof-card small{font-size:11px;margin-top:2px}
+ .quiz-section{padding:40px 0;scroll-margin-top:70px}
+}
 </style>
 </head>
 <body>
@@ -255,44 +327,49 @@
 <!-- HEADER -->
 <header class="header" id="header">
   <div class="container header-inner">
-    <a href="#" class="logo" aria-label="Быттех — ремонт стиральных машин в Самаре">
-      <span class="logo-word logo-word--byt">Быт</span>
-      <svg class="logo-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <defs>
-          <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#3b82f6"/>
-            <stop offset="1" stop-color="#1a56db"/>
-          </linearGradient>
-        </defs>
-        <g transform="translate(20 20) rotate(-45)">
-          <rect x="-3.2" y="-15" width="6.4" height="11" rx="2.2" fill="url(#lg)"/>
-          <line x1="-3.2" y1="-9.5" x2="3.2" y2="-9.5" stroke="#fff" stroke-width=".8" opacity=".55"/>
-          <line x1="-3.2" y1="-7.5" x2="3.2" y2="-7.5" stroke="#fff" stroke-width=".8" opacity=".55"/>
-          <rect x="-1.3" y="-4" width="2.6" height="15" fill="url(#lg)"/>
-          <path d="M -2 11 L 2 11 L 1.4 15 L -1.4 15 Z" fill="url(#lg)"/>
-        </g>
-        <g transform="translate(20 20) rotate(45)">
-          <rect x="-2" y="-15" width="4" height="30" rx="1.8" fill="url(#lg)"/>
-          <path d="M -6.5 -15 L 6.5 -15 L 9 -20 L 5 -20 L 3 -17 L -3 -17 L -5 -20 L -9 -20 Z" fill="url(#lg)"/>
-          <path d="M -6.5 15 L 6.5 15 L 9 20 L 5 20 L 3 17 L -3 17 L -5 20 L -9 20 Z" fill="url(#lg)"/>
-        </g>
-      </svg>
-      <span class="logo-word logo-word--teh">тех</span>
-    </a>
-    <nav class="header-nav">
+    <a href="#top" class="logo" aria-label="БытТех — на главную"><span class="logo-word logo-word--byt">Быт</span><svg class="logo-icon" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+<defs><linearGradient id="steel" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#eceff2"/><stop offset=".43" stop-color="#9fa6ac"/><stop offset=".72" stop-color="#5d646b"/><stop offset="1" stop-color="#c9cdd2"/></linearGradient></defs>
+<g transform="rotate(42 30 30)" stroke="#50575d" stroke-width="1.3" stroke-linejoin="round"><path d="M24 8A11 11 0 0 1 36 8L33 16 27 16Z" fill="#fff"/><path d="M24 8C17 11 17 23 24 27L24 49Q30 56 36 49L36 27C43 23 43 11 36 8L33 16 27 16Z" fill="url(#steel)"/><path d="M28 29V47" stroke="#e3e6e8" stroke-width="2" stroke-linecap="round"/></g>
+<g transform="rotate(-42 30 30)" stroke="#464d54" stroke-width="1.1" stroke-linejoin="round"><rect x="27" y="13" width="6" height="33" rx="2" fill="url(#steel)"/><path d="M28 13V6H32V13Z" fill="#c9cdd2"/><rect x="24" y="40" width="12" height="15" rx="4" fill="#4b5055"/></g></svg><span class="logo-word logo-word--teh">Тех</span></a>
+    <nav class="header-nav" id="headerNav" aria-label="Основная навигация">
       <a href="#prices">Цены</a>
       <a href="#honesty">Честность</a>
       <a href="#discounts">Скидки</a>
       <a href="#how">Как вызвать</a>
     </nav>
+    <button type="button" class="menu-toggle" id="menuToggle" aria-label="Открыть меню" aria-controls="headerNav" aria-expanded="false"><span></span><span></span><span></span></button>
     <a href="tel:+78460000000" class="header-phone">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92z"/>
       </svg>
       <span>+7 (846) 000-00-00</span>
     </a>
+    <a href="#quiz" class="btn btn-primary header-cta">Вызвать мастера</a>
   </div>
 </header>
+
+<!-- HERO -->
+<section class="hero" id="top" aria-labelledby="heroTitle">
+  <div class="container hero-grid">
+    <div class="hero-copy">
+      <span class="hero-badge">Ремонт стиральных машин · Самара</span>
+      <h1 id="heroTitle">Ремонт <br>стиральных машин <span>на дому</span></h1>
+      <p class="hero-lead"><b>Олег — частный мастер с опытом 12 лет.</b> Ремонтирую стиральные машины в Самаре. В 90% случаев называю стоимость по телефону. Гарантия на работы — от 3 до 12 месяцев с талоном.</p>
+      <div class="hero-cta">
+        <a href="#quiz" class="btn btn-primary btn-lg">Вызвать мастера</a>
+        <a href="#prices" class="btn btn-outline btn-lg">Узнать цену</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <img class="hero-photo" src="data:image/webp;base64,__PHOTO_BASE64__" width="330" height="475" loading="eager" decoding="async" fetchpriority="high" alt="Девушка рядом со стиральной машиной" />
+    </div>
+  </div>
+  <div class="container hero-proof" aria-label="Преимущества сервиса">
+    <div class="hero-proof-card"><span class="hero-proof-icon" aria-hidden="true">✓</span><div><strong>12 лет опыта</strong><small>Ремонт стиральных машин в Самаре</small></div></div>
+    <div class="hero-proof-card"><span class="hero-proof-icon" aria-hidden="true">◇</span><div><strong>Гарантия 3–12 месяцев</strong><small>Гарантийный талон на руки</small></div></div>
+    <div class="hero-proof-card"><span class="hero-proof-icon" aria-hidden="true">₽</span><div><strong>Честная стоимость</strong><small>Оценка по телефону в 90% случаев</small></div></div>
+  </div>
+</section>
 
 <!-- QUIZ -->
 <section class="quiz-section">
@@ -396,53 +473,6 @@
         <button type="button" class="btn btn-outline" id="quizBack" disabled>← Назад</button>
         <button type="button" class="btn btn-primary" id="quizNext" disabled>Далее →</button>
       </div>
-    </div>
-  </div>
-</section>
-
-<!-- HERO -->
-<section class="hero">
-  <div class="container hero-grid">
-    <div>
-      <span class="hero-badge">Честные цены · Самара · 7 дней в неделю</span>
-      <h1>Ремонт стиральных машин <span>на дому</span> без сюрпризов в цене</h1>
-      <p class="hero-lead">
-        <b>Олег, самозанятый мастер.</b> 12 лет опыта в Самаре. Чиню все бренды —
-        от Bosch до Indesit. <b style="color:var(--blue)">В 90% случаев называю стоимость ремонта сразу по телефону.</b>
-        Гарантия от 3 месяцев до года, выдаю гарантийный талон на руки.
-        Чек электронный через «Мой налог».
-      </p>
-      <div class="hero-cta">
-        <a href="#prices" class="btn btn-primary btn-lg">Смотреть цены</a>
-        <a href="tel:+78460000000" class="btn btn-outline btn-lg">+7 (846) 000-00-00</a>
-      </div>
-      <div class="hero-stats">
-        <div class="stat"><b data-count="12">0</b><span>лет в Самаре</span></div>
-        <div class="stat"><b data-count="4800" data-suffix="+">0</b><span>ремонтов</span></div>
-        <div class="stat"><b>3–12 мес.</b><span>гарантия + талон</span></div>
-        <div class="stat"><b class="blue">−10%</b><span>пенсионерам и СВО</span></div>
-      </div>
-    </div>
-    <div class="hero-visual">
-      <svg viewBox="0 0 320 400" xmlns="http://www.w3.org/2000/svg" fill="none">
-        <rect x="55" y="30" width="210" height="340" rx="20" fill="#f7f9fc" stroke="#cbd5e0" stroke-width="2"/>
-        <line x1="55" y1="90" x2="265" y2="90" stroke="#e2e8f0" stroke-width="2"/>
-        <circle cx="88" cy="62" r="7" fill="none" stroke="#1a56db" stroke-width="2"/>
-        <circle cx="88" cy="62" r="3" fill="#1a56db"/>
-        <circle cx="112" cy="62" r="7" fill="none" stroke="#3b82f6" stroke-width="2"/>
-        <circle cx="112" cy="62" r="3" fill="#3b82f6"/>
-        <rect x="140" y="52" width="45" height="20" rx="4" fill="#e2e8f0"/>
-        <text x="162" y="66" fill="#4a5568" font-family="monospace" font-size="9" text-anchor="middle">02:47</text>
-        <circle cx="240" cy="62" r="10" fill="none" stroke="#cbd5e0" stroke-width="2"/>
-        <line x1="240" y1="62" x2="240" y2="54" stroke="#1a56db" stroke-width="2" stroke-linecap="round"/>
-        <circle cx="160" cy="230" r="75" fill="#edf2f7" stroke="#cbd5e0" stroke-width="2"/>
-        <circle cx="160" cy="230" r="60" fill="none" stroke="#a0aec0" stroke-width="1.5" stroke-dasharray="6 10"/>
-        <circle cx="160" cy="230" r="38" fill="none" stroke="#1a56db" stroke-width="2" stroke-dasharray="4 8"/>
-        <circle cx="160" cy="230" r="12" fill="#1a56db" opacity=".15"/>
-        <rect x="80" y="335" width="160" height="4" rx="2" fill="#e2e8f0"/>
-        <rect x="72" y="366" width="18" height="8" rx="2" fill="#e2e8f0"/>
-        <rect x="230" y="366" width="18" height="8" rx="2" fill="#e2e8f0"/>
-      </svg>
     </div>
   </div>
 </section>
@@ -775,30 +805,10 @@
   <div class="container">
     <div class="footer-grid">
       <div class="footer-brand">
-        <a href="#" class="logo" aria-label="Быттех">
-          <span class="logo-word logo-word--byt">Быт</span>
-          <svg class="logo-icon" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <defs>
-              <linearGradient id="lg-f" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0" stop-color="#3b82f6"/>
-                <stop offset="1" stop-color="#1a56db"/>
-              </linearGradient>
-            </defs>
-            <g transform="translate(20 20) rotate(-45)">
-              <rect x="-3.2" y="-15" width="6.4" height="11" rx="2.2" fill="url(#lg-f)"/>
-              <line x1="-3.2" y1="-9.5" x2="3.2" y2="-9.5" stroke="#fff" stroke-width=".8" opacity=".55"/>
-              <line x1="-3.2" y1="-7.5" x2="3.2" y2="-7.5" stroke="#fff" stroke-width=".8" opacity=".55"/>
-              <rect x="-1.3" y="-4" width="2.6" height="15" fill="url(#lg-f)"/>
-              <path d="M -2 11 L 2 11 L 1.4 15 L -1.4 15 Z" fill="url(#lg-f)"/>
-            </g>
-            <g transform="translate(20 20) rotate(45)">
-              <rect x="-2" y="-15" width="4" height="30" rx="1.8" fill="url(#lg-f)"/>
-              <path d="M -6.5 -15 L 6.5 -15 L 9 -20 L 5 -20 L 3 -17 L -3 -17 L -5 -20 L -9 -20 Z" fill="url(#lg-f)"/>
-              <path d="M -6.5 15 L 6.5 15 L 9 20 L 5 20 L 3 17 L -3 17 L -5 20 L -9 20 Z" fill="url(#lg-f)"/>
-            </g>
-          </svg>
-          <span class="logo-word logo-word--teh">тех</span>
-        </a>
+        <a href="#top" class="logo" aria-label="БытТех — на главную"><span class="logo-word logo-word--byt">Быт</span><svg class="logo-icon" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+<defs><linearGradient id="steel" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#eceff2"/><stop offset=".43" stop-color="#9fa6ac"/><stop offset=".72" stop-color="#5d646b"/><stop offset="1" stop-color="#c9cdd2"/></linearGradient></defs>
+<g transform="rotate(42 30 30)" stroke="#50575d" stroke-width="1.3" stroke-linejoin="round"><path d="M24 8A11 11 0 0 1 36 8L33 16 27 16Z" fill="#fff"/><path d="M24 8C17 11 17 23 24 27L24 49Q30 56 36 49L36 27C43 23 43 11 36 8L33 16 27 16Z" fill="url(#steel)"/><path d="M28 29V47" stroke="#e3e6e8" stroke-width="2" stroke-linecap="round"/></g>
+<g transform="rotate(-42 30 30)" stroke="#464d54" stroke-width="1.1" stroke-linejoin="round"><rect x="27" y="13" width="6" height="33" rx="2" fill="url(#steel)"/><path d="M28 13V6H32V13Z" fill="#c9cdd2"/><rect x="24" y="40" width="12" height="15" rx="4" fill="#4b5055"/></g></svg><span class="logo-word logo-word--teh">Тех</span></a>
         <p>Самозанятый Олег — ремонт стиральных машин на дому в Самаре. 12 лет опыта, оригинальные запчасти, гарантия от 3 месяцев до года. На каждую работу выдаю бумажный гарантийный талон, чек — электронный через «Мой налог».</p>
         <p class="footer-legal">
           Самозанятый · Плательщик налога на профессиональный доход (НПД).<br>
@@ -835,6 +845,16 @@
 </a>
 
 <script>
+
+  const menuToggle=document.getElementById('menuToggle');
+  if(menuToggle){
+    const closeMenu=()=>{header.classList.remove('menu-open');menuToggle.setAttribute('aria-expanded','false');menuToggle.setAttribute('aria-label','Открыть меню');};
+    menuToggle.addEventListener('click',()=>{const expanded=header.classList.toggle('menu-open');menuToggle.setAttribute('aria-expanded',String(expanded));menuToggle.setAttribute('aria-label',expanded?'Закрыть меню':'Открыть меню');});
+    document.querySelectorAll('#headerNav a').forEach(a=>a.addEventListener('click',closeMenu));
+    document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu();});
+    document.addEventListener('click',e=>{if(!header.contains(e.target))closeMenu();});
+  }
+
   document.getElementById('year').textContent = new Date().getFullYear();
 
   const header = document.getElementById('header');

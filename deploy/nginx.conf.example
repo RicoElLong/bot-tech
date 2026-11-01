@@ -1,0 +1,12 @@
+# Place these directives inside the site's existing HTTPS server block.
+# Keep the existing hostname, TLS certificates and HTTP-to-HTTPS redirect.
+client_max_body_size 12k;
+
+location / {
+    proxy_pass http://127.0.0.1:8080;
+    proxy_set_header Host $host;
+    # Overwrite the client's value: the application trusts the loopback proxy.
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 20s;
+}

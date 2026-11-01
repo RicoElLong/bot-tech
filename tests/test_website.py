@@ -8,6 +8,8 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import AsyncMock, patch
 from uuid import uuid4
+from datetime import timedelta
+from scheduling import local_now
 
 from aiohttp.test_utils import TestClient, TestServer
 from telegram.error import NetworkError, RetryAfter
@@ -36,7 +38,8 @@ class WebsiteTests(unittest.IsolatedAsyncioTestCase):
 
     def payload(self, **changes):
         data = {'submission_id': str(uuid4()), 'name': 'Анна', 'phone': '8 (999) 123-45-67',
-                'brand': 'Bosch', 'problem': 'Не сливает воду', 'comment': 'Вечером после 18:00', 'website': ''}
+                'brand': 'Bosch', 'problem': 'Не сливает воду', 'comment': 'Вечером после 18:00', 'website': '',
+                'preferred_date': (local_now().date()+timedelta(days=2)).isoformat(), 'preferred_time': '10:00'}
         data.update(changes)
         return data
 
@@ -53,6 +56,8 @@ class WebsiteTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsNone(row['user_id'])
         self.assertEqual(row['phone'], '+79991234567')
         self.assertEqual(row['source'], 'website')
+        self.assertEqual(row['preferred_date'], self.payload()['preferred_date'])
+        self.assertEqual(row['preferred_time'], '10:00')
         self.assertEqual(self.db.counts(), (0, 0, 1))
         query = SimpleNamespace(from_user=SimpleNamespace(id=99), data='admin:requests:0',
                                 answer=AsyncMock(), edit_message_text=AsyncMock())
@@ -62,8 +67,25 @@ class WebsiteTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn('Анна', text)
         self.assertIn('Источник: сайт', text)
         self.assertIn('Bosch', text)
+        self.assertIn('Желаемое время', text)
+        self.assertIn('10:00', text)
         self.assertNotIn('ID None', text)
         self.bot.send_message.assert_not_awaited()
+
+
+    async def test_preferred_time_validation(self):
+        day = (local_now().date()+timedelta(days=2)).isoformat()
+        for payload in (
+            self.payload(preferred_date=day,preferred_time='04:00'),
+            self.payload(preferred_date=day,preferred_time='22:00'),
+            self.payload(preferred_date='2000-01-01',preferred_time='12:00'),
+            self.payload(preferred_date=day,preferred_time=''),
+        ):
+            response=await self.post(payload)
+            self.assertEqual(response.status,400)
+        response=await self.post(self.payload(preferred_date=day,preferred_time='16:00'))
+        self.assertEqual(response.status,201)
+        self.assertEqual(self.db.page('requests',0)[0]['preferred_time'],'16:00')
 
     async def test_retry_and_restart_do_not_duplicate_request_or_queue(self):
         data = self.payload()

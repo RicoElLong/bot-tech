@@ -10,7 +10,38 @@
   const nav = document.getElementById('quizNav');
   const errorBox = document.getElementById('quizError');
   const field = name => quiz.querySelector(`[name="${name}"]`);
-  const controls = quiz.querySelectorAll('.quiz-form input, .quiz-form textarea, .quiz-opt');
+  const controls = quiz.querySelectorAll('.quiz-form input, .quiz-form textarea, .quiz-form select, .quiz-opt');
+  const preferredDate = field('preferredDate');
+  const preferredTime = field('preferredTime');
+
+  function samaraToday() {
+    const parts = new Intl.DateTimeFormat('en-CA', {timeZone: 'Europe/Samara', year: 'numeric',
+      month: '2-digit', day: '2-digit'}).formatToParts(new Date());
+    const map = Object.fromEntries(parts.filter(p => p.type !== 'literal').map(p => [p.type,p.value]));
+    return [map.year,map.month,map.day].join('-');
+  }
+  function dayPlus(iso, offset) {
+    const day = new Date(iso + 'T00:00:00Z');
+    day.setUTCDate(day.getUTCDate() + offset);
+    return day.toISOString().slice(0,10);
+  }
+  function refreshPreferred() {
+    const today = samaraToday();
+    preferredDate.min = today;
+    preferredDate.max = dayPlus(today, 6);
+    if (preferredDate.value && (preferredDate.value < preferredDate.min || preferredDate.value > preferredDate.max))
+      preferredDate.value = '';
+    const parts = new Intl.DateTimeFormat('en-GB', {timeZone:'Europe/Samara',hour:'2-digit',
+      minute:'2-digit',hour12:false}).formatToParts(new Date());
+    const hm = Object.fromEntries(parts.filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
+    const nowClock = hm.hour.padStart(2,'0') + ':' + hm.minute.padStart(2,'0');
+    for(const option of preferredTime.options) {
+      if (!option.value) continue;
+      option.disabled = preferredDate.value === today && option.value <= nowClock;
+    }
+    if (preferredTime.selectedOptions.length && preferredTime.selectedOptions[0].disabled) preferredTime.value='';
+  }
+  refreshPreferred();
   const answers = {brand: '', problem: ''};
   let step = 1;
   let sending = false;
@@ -30,7 +61,10 @@
     nav.style.display = step === 4 ? 'none' : 'flex';
     quiz.setAttribute('aria-busy', String(sending));
     const ready = step === 1 ? Boolean(answers.brand) : step === 2 ? Boolean(answers.problem)
-      : Boolean(field('quizName').value.trim()) && validPhone(field('quizPhone').value.trim());
+      : Boolean(field('quizName').value.trim()) && validPhone(field('quizPhone').value.trim())
+        && Boolean(preferredDate.value) && Boolean(preferredTime.value)
+        && preferredDate.value >= preferredDate.min && preferredDate.value <= preferredDate.max
+        && !preferredTime.selectedOptions[0]?.disabled;
     btnNext.disabled = sending || !ready;
     btnNext.textContent = sending ? 'Отправляем…' : step === 3 ? 'Отправить заявку' : 'Далее →';
   }
@@ -63,6 +97,8 @@
       });
     });
   });
+  preferredDate.addEventListener('change', refreshPreferred);
+  preferredTime.addEventListener('focus', refreshPreferred);
   controls.forEach(input => input.addEventListener('input', () => {
     showError();
     updateUI();
@@ -76,10 +112,15 @@
       updateUI();
       return;
     }
+    refreshPreferred();
     if (!field('quizName').reportValidity() || !field('quizPhone').reportValidity()
-        || !validPhone(field('quizPhone').value.trim())) return;
+        || !validPhone(field('quizPhone').value.trim()) || !preferredDate.reportValidity()
+        || !preferredTime.reportValidity() || preferredTime.selectedOptions[0]?.disabled) {
+      showError('Выберите доступные дату и время визита.'); return;
+    }
     const data = {...answers, name: field('quizName').value.trim(), phone: field('quizPhone').value.trim(),
-      comment: field('quizComment').value.trim(), website: field('website').value};
+      comment: field('quizComment').value.trim(), website: field('website').value,
+      preferred_date: preferredDate.value, preferred_time: preferredTime.value};
     const snapshot = JSON.stringify(data);
     if (!pending || pending.snapshot !== snapshot) pending = {snapshot, id: uuid()};
     sending = true;
@@ -102,6 +143,7 @@
       document.getElementById('sumBrand').textContent = data.brand;
       document.getElementById('sumProblem').textContent = data.problem;
       document.getElementById('sumRequest').textContent = `№${result.request_id}`;
+      document.getElementById('sumPreferred').textContent = `${data.preferred_date.split('-').reverse().join('.')} ${data.preferred_time} (ожидает подтверждения)`;
       step = 4;
       pending = null;
     } catch (error) {

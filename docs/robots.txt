@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://ricoellong.github.io/bot-tech/sitemap.xml

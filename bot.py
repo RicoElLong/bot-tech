@@ -135,6 +135,7 @@ async def admin_page(update, context):
             text += '\nИсточник: ' + ('сайт' if row['source'] == 'website' else 'Telegram')
             if row['source'] == 'website':
                 text += f'\nМарка: {row["brand"]}\nКомментарий: {row["comment"] or "—"}'
+                text += f'\nЖелаемое время: {row["preferred_date"] or "не указано"} {row["preferred_time"] or ""} (ожидает подтверждения)'
         entries.append(text)
     buttons = []
     if page:

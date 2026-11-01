@@ -103,6 +103,16 @@
     .quiz-nav{flex-direction:column-reverse}
   }
 
+  /* FORM DATE AND TIME (Samara) */
+  .quiz-preferred{margin:7px 0 4px}
+  .quiz-field-label{font-size:15px;font-weight:800;display:block;margin-bottom:10px;color:var(--text)}
+  .quiz-datetime{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .quiz-field-hint{font-size:12px;font-weight:600;color:var(--text-2);display:block;margin-bottom:5px}
+  .quiz-form select{appearance:auto;width:100%;padding:14px 12px;border-radius:8px;background:#fff;border:1.5px solid var(--border);color:var(--text);font-size:14px;font-family:inherit;min-width:0}
+  .quiz-form select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-light)}
+  .quiz-field-note{font-size:12px;color:var(--muted);line-height:1.5;margin:8px 0 0}
+  @media(max-width:560px){.quiz-datetime{grid-template-columns:1fr}}
+
   /* HERO */
   .hero{padding:60px 0 70px}
   .hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:50px;align-items:center}
@@ -339,6 +349,21 @@
         <div class="quiz-form">
           <input type="text" name="quizName" placeholder="Ваше имя" autocomplete="name" maxlength="100" required />
           <input type="tel" name="quizPhone" placeholder="Телефон" autocomplete="tel" inputmode="tel" maxlength="40" required />
+          <div class="quiz-preferred">
+            <label class="quiz-field-label" for="preferredDate">Когда удобнее приехать?</label>
+            <div class="quiz-datetime">
+              <div><label class="quiz-field-hint" for="preferredDate">Дата</label><input type="date" id="preferredDate" name="preferredDate" required /></div>
+              <div><label class="quiz-field-hint" for="preferredTime">Время (Самара)</label>
+                <select id="preferredTime" name="preferredTime" required>
+                  <option value="">Выберите время</option>
+                  <option value="08:00">08:00–10:00</option><option value="10:00">10:00–12:00</option>
+                  <option value="12:00">12:00–14:00</option><option value="14:00">14:00–16:00</option>
+                  <option value="16:00">16:00–18:00</option><option value="18:00">18:00–20:00</option>
+                </select>
+              </div>
+            </div>
+            <p class="quiz-field-note">Это пожелание по времени: мастер подтвердит визит после звонка.</p>
+          </div>
           <textarea name="quizComment" placeholder="Комментарий (необязательно)" maxlength="2000" rows="2"></textarea>
           <input type="text" name="website" style="position:absolute;left:-9999px" tabindex="-1" autocomplete="off" aria-hidden="true">
           <p id="quizError" role="alert" style="color:#b42318;font-size:14px" hidden></p>
@@ -358,6 +383,7 @@
             <div class="quiz-summary-row"><span>Номер заявки</span><span id="sumRequest">—</span></div>
             <div class="quiz-summary-row"><span>Марка</span><span id="sumBrand">—</span></div>
             <div class="quiz-summary-row"><span>Поломка</span><span id="sumProblem">—</span></div>
+            <div class="quiz-summary-row"><span>Желаемое время</span><span id="sumPreferred">—</span></div>
             <div class="quiz-summary-row"><span>Диагностика</span><span style="color:var(--green)">Бесплатно</span></div>
           </div>
           <a href="tel:+78460000000" class="btn btn-primary btn-block" style="margin-top:8px">

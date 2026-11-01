@@ -1,5 +1,6 @@
 import re
 import sqlite3
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from scheduling import TIMES, local_now, validate_slot, slot_start
@@ -18,6 +19,10 @@ def canonical_phone(phone):
 
 
 class SlotUnavailable(ValueError):
+    pass
+
+
+class SubmissionConflict(ValueError):
     pass
 
 
@@ -50,6 +55,41 @@ class Store:
         ''')
         self.db.commit()
         self._migrate_requests()
+        self._migrate_sources()
+
+    def _migrate_sources(self):
+        # Rebuild once: a website visitor does not have a Telegram user_id.
+        columns = {row['name'] for row in self.db.execute('PRAGMA table_info(requests)')}
+        with self.db:
+            self.db.execute('BEGIN IMMEDIATE')
+            if 'source' not in columns:
+                self.db.execute('''CREATE TABLE requests_with_sources (
+                    id INTEGER PRIMARY KEY, user_id INTEGER, phone TEXT NOT NULL,
+                    problem TEXT NOT NULL, created TEXT NOT NULL, booking TEXT,
+                    source TEXT NOT NULL DEFAULT 'telegram' CHECK(source IN ('telegram','website')),
+                    contact_name TEXT NOT NULL DEFAULT '', brand TEXT NOT NULL DEFAULT '',
+                    comment TEXT NOT NULL DEFAULT '',
+                    CHECK((source='telegram' AND user_id IS NOT NULL)
+                        OR (source='website' AND user_id IS NULL)))''')
+                self.db.execute('''INSERT INTO requests_with_sources(id,user_id,phone,problem,created,booking)
+                    SELECT id,user_id,phone,problem,created,booking FROM requests''')
+                self.db.execute('DROP TABLE requests')
+                self.db.execute('ALTER TABLE requests_with_sources RENAME TO requests')
+                self.db.execute("CREATE UNIQUE INDEX requests_phone_unique ON requests(phone) WHERE source='telegram'")
+            columns = {row['name'] for row in self.db.execute('PRAGMA table_info(requests)')}
+            if 'preferred_date' not in columns:
+                self.db.execute('ALTER TABLE requests ADD COLUMN preferred_date TEXT')
+            if 'preferred_time' not in columns:
+                self.db.execute('ALTER TABLE requests ADD COLUMN preferred_time TEXT')
+            self.db.execute('''CREATE TABLE IF NOT EXISTS web_submissions (
+                submission_id TEXT PRIMARY KEY, payload_hash TEXT NOT NULL,
+                request_id INTEGER NOT NULL, created TEXT NOT NULL)''')
+            self.db.execute('''CREATE TABLE IF NOT EXISTS web_notifications (
+                request_id INTEGER NOT NULL, admin_id INTEGER NOT NULL,
+                status TEXT NOT NULL DEFAULT 'pending', attempts INTEGER NOT NULL DEFAULT 0,
+                next_attempt REAL NOT NULL DEFAULT 0, PRIMARY KEY(request_id,admin_id))''')
+            self.db.execute('''CREATE INDEX IF NOT EXISTS web_notifications_due
+                ON web_notifications(status,next_attempt)''')
 
     def _migrate_requests(self):
         if self.db.execute("SELECT 1 FROM sqlite_master WHERE type='index' AND name='requests_phone_unique'").fetchone():
@@ -108,7 +148,7 @@ class Store:
             row = self.db.execute("""INSERT INTO requests(id,user_id,phone,problem,created)
                 VALUES((SELECT COALESCE(MAX(id),0)+1 FROM (
                     SELECT id FROM requests UNION ALL SELECT id FROM request_tombstones)),?,?,?,?)
-                ON CONFLICT(phone) DO UPDATE SET user_id=excluded.user_id,
+                ON CONFLICT(phone) WHERE source='telegram' DO UPDATE SET user_id=excluded.user_id,
                     problem=CASE WHEN ? THEN excluded.problem ELSE requests.problem END
                 RETURNING id""",
                 (uid, canonical_phone(self.user(uid)['phone']), problem, now(), draft is not None)).fetchone()
@@ -121,7 +161,52 @@ class Store:
         user = self.user(uid)
         if not user or not user['phone']:
             return None
-        return self.db.execute('SELECT * FROM requests WHERE phone=?', (canonical_phone(user['phone']),)).fetchone()
+        return self.db.execute("SELECT * FROM requests WHERE phone=? AND source='telegram'",
+                               (canonical_phone(user['phone']),)).fetchone()
+
+    def web_submission(self, submission_id, payload_hash):
+        row = self.db.execute('SELECT * FROM web_submissions WHERE submission_id=?',
+                              (submission_id,)).fetchone()
+        if row and row['payload_hash'] != payload_hash:
+            raise SubmissionConflict('Эта отправка уже принята с другими данными. Обновите страницу.')
+        return row['request_id'] if row else None
+
+    def submit_website(self, submission_id, payload_hash, data, admins):
+        with self.db:
+            existing = self.web_submission(submission_id, payload_hash)
+            if existing is not None:
+                return existing, False
+            timestamp = now()
+            row = self.db.execute('''INSERT INTO requests
+                (id,user_id,phone,problem,created,source,contact_name,brand,comment,preferred_date,preferred_time)
+                VALUES((SELECT COALESCE(MAX(id),0)+1 FROM (
+                    SELECT id FROM requests UNION ALL SELECT id FROM request_tombstones)),
+                    NULL,?,?,?,'website',?,?,?,?,?) RETURNING id''',
+                (data['phone'], data['problem'], timestamp, data['name'], data['brand'], data['comment'],
+                 data['preferred_date'],data['preferred_time'])).fetchone()
+            request_id = row['id']
+            self.db.execute('INSERT INTO web_submissions VALUES(?,?,?,?)',
+                            (submission_id, payload_hash, request_id, timestamp))
+            self.db.executemany('INSERT INTO web_notifications(request_id,admin_id) VALUES(?,?)',
+                                [(request_id, admin_id) for admin_id in sorted(set(admins))])
+        return request_id, True
+
+    def due_web_notifications(self, timestamp=None):
+        return self.db.execute('''SELECT n.admin_id,n.attempts,r.* FROM web_notifications n
+            JOIN requests r ON r.id=n.request_id
+            WHERE n.status='pending' AND n.next_attempt<=?
+            ORDER BY n.next_attempt,n.request_id,n.admin_id LIMIT 20''',
+            (time.time() if timestamp is None else timestamp,)).fetchall()
+
+    def finish_web_notification(self, request_id, admin_id, status='sent'):
+        with self.db:
+            self.db.execute('UPDATE web_notifications SET status=? WHERE request_id=? AND admin_id=?',
+                            (status, request_id, admin_id))
+
+    def retry_web_notification(self, request_id, admin_id, delay):
+        with self.db:
+            self.db.execute('''UPDATE web_notifications SET attempts=attempts+1,next_attempt=?
+                WHERE request_id=? AND admin_id=?''', (time.time()+delay, request_id, admin_id))
 
     def begin_booking(self, uid):
         with self.db:
@@ -178,22 +263,26 @@ class Store:
             self.db.execute('INSERT OR IGNORE INTO request_tombstones(id) VALUES(?)', (request_id,))
             self.db.execute('UPDATE appointments SET cancelled=? WHERE request_id=? AND cancelled IS NULL',
                             (now(), request_id))
-            clients = self.db.execute('SELECT id FROM users WHERE phone=?', (request['phone'],)).fetchall()
+            clients = (self.db.execute('SELECT id FROM users WHERE phone=?', (request['phone'],)).fetchall()
+                       if request['source'] == 'telegram' else [])
             for client in clients:
                 uid = client['id']
                 self.db.execute('DELETE FROM drafts WHERE user_id=?', (uid,))
                 self.db.execute('DELETE FROM booking_selections WHERE user_id=?', (uid,))
                 self.db.execute("UPDATE users SET stage='menu' WHERE id=?", (uid,))
             self.db.execute('DELETE FROM requests WHERE id=?', (request_id,))
+            self.db.execute('DELETE FROM web_notifications WHERE request_id=?', (request_id,))
         return True
 
     def page(self, kind, page, limit=5):
         queries = {
             'visits': 'SELECT v.created,u.id,u.name,u.username FROM visits v JOIN users u ON u.id=v.user_id ORDER BY v.id DESC',
-            'requests': 'SELECT r.*,u.name FROM requests r JOIN users u ON u.id=r.user_id ORDER BY r.id DESC',
+            'requests': '''SELECT r.*,COALESCE(NULLIF(r.contact_name,''),u.name,'Посетитель сайта') AS name
+                FROM requests r LEFT JOIN users u ON u.id=r.user_id ORDER BY r.id DESC''',
         }
         return self.db.execute(queries[kind] + ' LIMIT ? OFFSET ?', (limit + 1, page * limit)).fetchall()
 
     def counts(self):
         return tuple(self.db.execute(f'SELECT COUNT(*) FROM {table}').fetchone()[0]
                      for table in ('users', 'visits', 'requests'))
+

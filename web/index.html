@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Быттех — ремонт стиральных машин в Самаре на дому | Самозанятый Олег</title>
+<meta name="description" content="Ремонт стиральных машин на дому в Самаре. Цену говорим сразу, диагностика бесплатно, гарантия от 3 мес. до года + талон на руки. Скидка 10% пенсионерам и участникам СВО." />
+<meta name="theme-color" content="#ffffff" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=PT+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#ffffff;--bg-alt:#f7f9fc;--bg-dark:#0b1a33;
+    --text:#1a2332;--text-2:#4a5568;--muted:#718096;--muted-2:#a0aec0;
+    --blue:#1a56db;--blue-dark:#1e429f;--blue-light:#e1effe;--blue-mid:#c3ddfd;
+    --border:#e2e8f0;--green:#057a55;--green-bg:#def7ec;
+    --radius:10px;--radius-lg:16px;
+    --shadow-md:0 4px 12px rgba(0,0,0,.08);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  body{font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;
+    background:var(--bg);color:var(--text);line-height:1.65;
+    -webkit-font-smoothing:antialiased;overflow-x:hidden;font-size:16px}
+  a{color:inherit;text-decoration:none}
+  button{font-family:inherit}
+  .container{max-width:1180px;margin:0 auto;padding:0 20px}
+
+  /* HEADER + LOGO */
+  .header{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.95);
+    backdrop-filter:blur(12px);border-bottom:1px solid var(--border);transition:box-shadow .3s}
+  .header.scrolled{box-shadow:0 2px 12px rgba(0,0,0,.06)}
+  .header-inner{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:12px 0}
+  .logo{display:flex;align-items:center;gap:6px;flex-shrink:0;transition:opacity .25s;line-height:1}
+  .logo:hover{opacity:.85}
+  .logo-word{font-family:'Manrope',sans-serif;font-weight:800;letter-spacing:-.5px;line-height:1;color:var(--text);display:inline-flex;align-items:center}
+  .logo-word--byt{font-size:24px}
+  .logo-word--teh{font-size:30px;color:var(--blue);letter-spacing:-1px}
+  .logo-icon{width:32px;height:32px;flex-shrink:0;display:block;margin:0 2px;align-self:center}
+  @media (max-width:520px){
+    .logo-word--byt{font-size:20px}
+    .logo-word--teh{font-size:24px}
+    .logo-icon{width:26px;height:26px}
+    .logo{gap:4px}
+  }
+  .header-nav{display:flex;gap:28px;font-size:15px;font-weight:500;color:var(--text-2)}
+  .header-nav a{transition:color .2s}
+  .header-nav a:hover{color:var(--blue)}
+  .header-phone{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;color:var(--text);white-space:nowrap}
+  .header-phone svg{color:var(--blue);flex-shrink:0}
+  @media (max-width:900px){.header-nav{display:none}}
+  @media (max-width:480px){
+    .header-phone span{display:none}
+    .header-inner{padding:10px 0}
+  }
+
+  /* BUTTONS */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    padding:13px 26px;border-radius:8px;font-weight:600;font-size:15px;
+    border:none;cursor:pointer;transition:all .25s;white-space:nowrap;
+    font-family:'Manrope',sans-serif;text-align:center}
+  .btn-primary{background:var(--blue);color:#fff}
+  .btn-primary:hover{background:var(--blue-dark);box-shadow:0 4px 14px rgba(26,86,219,.35)}
+  .btn-outline{background:transparent;color:var(--blue);border:1.5px solid var(--blue)}
+  .btn-outline:hover{background:var(--blue-light)}
+  .btn-lg{padding:16px 32px;font-size:16px}
+  .btn-block{width:100%}
+
+  /* QUIZ */
+  .quiz-section{padding:40px 0 60px;background:var(--bg-alt);border-bottom:1px solid var(--border)}
+  .quiz-card{max-width:720px;margin:0 auto;background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:40px;box-shadow:var(--shadow-md)}
+  .quiz-progress{position:relative;height:3px;background:var(--border);border-radius:100px;margin-bottom:32px;overflow:hidden}
+  .quiz-progress-fill{position:absolute;inset:0;width:33%;border-radius:100px;background:var(--blue);transition:width .4s ease}
+  .quiz-count{position:absolute;top:-28px;right:0;font-size:12px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;font-weight:600}
+  .quiz-step{display:none}
+  .quiz-step.active{display:block;animation:fadeUp .35s ease}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .quiz-step h3{font-size:20px;font-weight:700;margin-bottom:6px}
+  .quiz-step > p{color:var(--muted);font-size:14px;margin-bottom:24px}
+  .quiz-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+  .quiz-opt{padding:13px 16px;border-radius:8px;background:#fff;border:1.5px solid var(--border);color:var(--text-2);font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;transition:all .2s;text-align:left;display:flex;align-items:center;gap:8px;line-height:1.3}
+  .quiz-opt:hover{border-color:var(--blue-mid);background:var(--blue-light)}
+  .quiz-opt.selected{border-color:var(--blue);background:var(--blue-light);color:var(--blue-dark);font-weight:600}
+  .quiz-opt .emoji{font-size:16px;flex-shrink:0}
+  .quiz-form{display:grid;gap:10px}
+  .quiz-form input,.quiz-form textarea{width:100%;padding:14px 16px;border-radius:8px;background:#fff;border:1.5px solid var(--border);color:var(--text);font-size:15px;font-family:inherit;transition:border .2s}
+  .quiz-form input:focus,.quiz-form textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-light)}
+  .quiz-form input::placeholder,.quiz-form textarea::placeholder{color:var(--muted-2)}
+  .quiz-nav{display:flex;justify-content:space-between;gap:12px;margin-top:28px;padding-top:20px;border-top:1px solid var(--border)}
+  .quiz-nav .btn{flex:1}
+  .quiz-nav .btn:disabled{opacity:.4;cursor:not-allowed}
+  .quiz-success{text-align:center;padding:16px 0}
+  .quiz-success .check{width:64px;height:64px;margin:0 auto 18px;border-radius:50%;background:var(--green-bg);display:grid;place-items:center;color:var(--green)}
+  .quiz-summary{display:grid;gap:6px;padding:16px 18px;border-radius:8px;background:var(--bg-alt);border:1px solid var(--border);margin-bottom:18px;font-size:14px}
+  .quiz-summary-row{display:flex;justify-content:space-between;gap:16px}
+  .quiz-summary-row span:first-child{color:var(--muted)}
+  .quiz-summary-row span:last-child{color:var(--text);font-weight:600;text-align:right}
+  @media (max-width:560px){
+    .quiz-card{padding:24px 18px}
+    .quiz-grid{grid-template-columns:1fr 1fr}
+    .quiz-opt{padding:11px 12px;font-size:13px}
+    .quiz-nav{flex-direction:column-reverse}
+  }
+
+  /* FORM DATE AND TIME (Samara) */
+  .quiz-preferred{margin:7px 0 4px}
+  .quiz-field-label{font-size:15px;font-weight:800;display:block;margin-bottom:10px;color:var(--text)}
+  .quiz-datetime{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .quiz-field-hint{font-size:12px;font-weight:600;color:var(--text-2);display:block;margin-bottom:5px}
+  .quiz-form select{appearance:auto;width:100%;padding:14px 12px;border-radius:8px;background:#fff;border:1.5px solid var(--border);color:var(--text);font-size:14px;font-family:inherit;min-width:0}
+  .quiz-form select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-light)}
+  .quiz-field-note{font-size:12px;color:var(--muted);line-height:1.5;margin:8px 0 0}
+  @media(max-width:560px){.quiz-datetime{grid-template-columns:1fr}}
+
+  /* HERO */
+  .hero{padding:60px 0 70px}
+  .hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:50px;align-items:center}
+  .hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:100px;font-size:13px;background:var(--blue-light);color:var(--blue-dark);font-weight:600;margin-bottom:22px}
+  .hero-badge::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0}
+  .hero h1{font-size:clamp(30px,4vw,48px);line-height:1.1;font-weight:800;letter-spacing:-1px;margin-bottom:20px}
+  .hero h1 span{color:var(--blue)}
+  .hero-lead{color:var(--text-2);font-size:17px;max-width:520px;margin-bottom:32px;line-height:1.7}
+  .hero-lead b{color:var(--text);font-weight:600}
+  .hero-cta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:40px}
+  .hero-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;padding-top:28px;border-top:1px solid var(--border)}
+  .stat b{display:block;font-size:clamp(22px,2.6vw,30px);font-weight:800;letter-spacing:-1px;line-height:1;margin-bottom:6px;color:var(--text)}
+  .stat b.blue{color:var(--blue)}
+  .stat span{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:500}
+  .hero-visual{position:relative;display:flex;align-items:center;justify-content:center}
+  .hero-visual svg{width:100%;max-width:380px;height:auto}
+  @media (max-width:960px){
+    .hero-grid{grid-template-columns:1fr;gap:32px}
+    .hero-visual{order:-1;max-width:300px;margin:0 auto}
+    .hero{padding:40px 0 50px}
+  }
+  @media (max-width:520px){
+    .hero-cta{flex-direction:column}
+    .hero-cta .btn{width:100%}
+    .hero-stats{grid-template-columns:1fr 1fr;gap:16px}
+  }
+
+  /* SECTIONS */
+  .section{padding:80px 0}
+  .section-alt{background:var(--bg-alt)}
+  .section-head{max-width:700px;margin-bottom:56px}
+  .section-head.center{text-align:center;margin-left:auto;margin-right:auto}
+  .section-label{display:inline-block;font-size:13px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px}
+  .section-head h2{font-size:clamp(26px,3.2vw,38px);font-weight:800;letter-spacing:-.8px;line-height:1.15;margin-bottom:14px}
+  .section-head h2 em{font-family:'PT Serif',serif;font-style:italic;font-weight:400;color:var(--blue)}
+  .section-head p{color:var(--text-2);font-size:16px;line-height:1.7}
+
+  /* REVEAL */
+  .reveal{opacity:0;transform:translateY(30px);transition:opacity .7s ease,transform .7s ease}
+  .reveal.in{opacity:1;transform:translateY(0)}
+
+  /* FEATURES */
+  .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
+  .feature{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:28px;transition:all .3s}
+  .feature:hover{border-color:var(--blue-mid);box-shadow:var(--shadow-md);transform:translateY(-3px)}
+  .feature-icon{width:48px;height:48px;border-radius:10px;background:var(--blue-light);display:grid;place-items:center;color:var(--blue);margin-bottom:18px}
+  .feature h3{font-size:17px;font-weight:700;margin-bottom:8px}
+  .feature p{font-size:14px;color:var(--text-2);line-height:1.65}
+
+  /* DISCOUNTS */
+  .discounts{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:860px;margin:0 auto}
+  .discount-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;display:flex;align-items:flex-start;gap:20px;transition:all .3s}
+  .discount-card:hover{border-color:var(--blue-mid);box-shadow:var(--shadow-md)}
+  .discount-icon{width:56px;height:56px;border-radius:12px;background:var(--blue-light);display:grid;place-items:center;color:var(--blue);flex-shrink:0}
+  .discount-info h3{font-size:18px;font-weight:700;margin-bottom:6px}
+  .discount-info .pct{font-size:28px;font-weight:800;color:var(--blue);letter-spacing:-1px;line-height:1;margin-bottom:10px}
+  .discount-info p{font-size:14px;color:var(--text-2);line-height:1.65}
+  @media (max-width:640px){
+    .discounts{grid-template-columns:1fr}
+    .discount-card{padding:24px;flex-direction:column;gap:14px}
+  }
+
+  /* PRICES */
+  .price-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+  .price-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:22px;display:flex;flex-direction:column;justify-content:space-between;min-height:150px;transition:all .25s}
+  .price-card:hover{border-color:var(--blue-mid);box-shadow:var(--shadow-md)}
+  .price-card h3{font-size:15px;font-weight:600;line-height:1.45;margin-bottom:12px;color:var(--text-2)}
+  .price-val{font-size:22px;font-weight:800;color:var(--blue);letter-spacing:-.5px;margin-top:auto}
+  .price-val.free{color:var(--green)}
+  .price-note{max-width:800px;margin:36px auto 0;padding:22px 26px;background:var(--bg-alt);border:1px solid var(--border);border-radius:var(--radius);font-size:14px;color:var(--text-2);line-height:1.7}
+  .price-note strong{color:var(--text);font-weight:600}
+  .price-note ul{list-style:none;padding:0;margin:10px 0 14px;display:grid;gap:4px}
+  .price-note li{display:flex;gap:8px;font-size:13px;color:var(--muted)}
+  .price-note li::before{content:'—';color:var(--blue);flex-shrink:0;font-weight:600}
+
+  /* PILLS */
+  .pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:900px;margin:0 auto}
+  .pill{padding:10px 20px;background:#fff;border:1px solid var(--border);border-radius:100px;font-size:14px;font-weight:500;color:var(--text-2);transition:all .2s}
+  .pill:hover{border-color:var(--blue);color:var(--blue);background:var(--blue-light)}
+
+  /* STEPS */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  .step{background:#fff;border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;position:relative}
+  .step-num{font-size:40px;font-weight:800;color:var(--blue-mid);line-height:1;letter-spacing:-2px;margin-bottom:16px}
+  .step h3{font-size:17px;font-weight:700;margin-bottom:8px}
+  .step p{font-size:14px;color:var(--text-2);line-height:1.65}
+  @media (max-width:760px){.steps{grid-template-columns:1fr;gap:14px}}
+
+  /* WARNINGS */
+  .warnings{display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:960px;margin:0 auto}
+  .warning{display:flex;gap:14px;padding:22px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);transition:all .25s}
+  .warning:hover{border-color:var(--blue-mid)}
+  .warning-icon{font-size:20px;line-height:1.2;flex-shrink:0}
+  .warning p{font-size:14px;color:var(--text-2);line-height:1.65}
+  .warning strong{color:var(--text);font-weight:600}
+  @media (max-width:640px){.warnings{grid-template-columns:1fr}}
+
+  /* DISTRICTS */
+  .districts{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;max-width:1040px;margin:0 auto}
+  .district{padding:16px 20px;border-radius:8px;background:#fff;border:1px solid var(--border);font-size:14px;font-weight:500;display:flex;align-items:center;gap:10px;color:var(--text-2);transition:all .2s}
+  .district::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--blue);flex-shrink:0}
+  .district:hover{border-color:var(--blue-mid);background:var(--blue-light);color:var(--text)}
+
+  /* CTA */
+  .cta-wrap{background:var(--bg-dark);border-radius:var(--radius-lg);padding:64px 48px;text-align:center;color:#fff;position:relative;overflow:hidden}
+  .cta-wrap::before{content:'';position:absolute;top:-50%;right:-20%;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(26,86,219,.3),transparent 70%);pointer-events:none}
+  .cta-wrap h2{font-size:clamp(26px,3.2vw,38px);font-weight:800;letter-spacing:-.8px;line-height:1.15;margin-bottom:16px;position:relative}
+  .cta-wrap h2 em{font-family:'PT Serif',serif;font-style:italic;font-weight:400;color:#93c5fd}
+  .cta-wrap p{color:#94a3b8;max-width:500px;margin:0 auto 32px;font-size:16px;line-height:1.7;position:relative}
+  .cta-wrap .btn{position:relative}
+  .cta-wrap .btn-primary{background:#fff;color:var(--blue-dark)}
+  .cta-wrap .btn-primary:hover{background:var(--blue-light);box-shadow:0 8px 24px rgba(255,255,255,.2)}
+  @media (max-width:560px){.cta-wrap{padding:40px 22px}}
+
+  /* FOOTER */
+  .footer{padding:56px 0 32px;border-top:1px solid var(--border);background:var(--bg-alt)}
+  .footer-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:40px;margin-bottom:40px}
+  .footer-brand .logo{margin-bottom:14px}
+  .footer-brand p{color:var(--text-2);font-size:14px;max-width:340px;line-height:1.7}
+  .footer-legal{margin-top:14px;font-size:12px;color:var(--muted);line-height:1.6;max-width:520px}
+  .footer-col h5{font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:16px;font-weight:700}
+  .footer-col a{display:block;font-size:14px;color:var(--text-2);padding:5px 0;transition:color .2s}
+  .footer-col a:hover{color:var(--blue)}
+  .footer-bottom{padding-top:24px;border-top:1px solid var(--border);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+  @media (max-width:640px){.footer-grid{grid-template-columns:1fr;gap:28px}}
+
+  /* FLOAT CALL */
+  .float-call{position:fixed;bottom:20px;right:20px;z-index:90;width:56px;height:56px;border-radius:50%;background:var(--blue);color:#fff;display:none;place-items:center;box-shadow:0 6px 20px rgba(26,86,219,.4);cursor:pointer;transition:transform .25s}
+  .float-call:hover{transform:scale(1.08)}
+  @media (max-width:900px){.float-call{display:grid}}
+
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms !important;transition-duration:.01ms !important}
+    .reveal{opacity:1;transform:none}
+  }
+
+/* БытТех: approved responsive header and hero design */
+:root{--blue:#00a9d9;--blue-dark:#007bb4;--blue-light:#e1f5ff;--blue-mid:#9bdaf0}
+.header{background:rgba(255,255,255,.96)}
+.header-inner{position:relative;gap:16px;min-height:76px}
+.logo{gap:0;isolation:isolate}
+.logo-word{font-weight:800;letter-spacing:-.055em}
+.logo-word--byt{font-size:30px;color:#00b3d9}
+.logo-word--teh{font-size:30px;color:#080d17;letter-spacing:-.055em}
+.logo-icon{height:46px;width:46px;margin:0 -2px;overflow:visible}
+.header-nav{gap:20px;font-size:13px}
+.header-phone{font-size:13px}
+.header-cta{font-size:13px;padding:11px 14px;flex-shrink:0}
+.menu-toggle{display:none;align-items:center;justify-content:center;flex-direction:column;gap:5px;width:44px;height:44px;border:0;border-radius:10px;background:#f0f8ff;cursor:pointer}
+.menu-toggle span{width:23px;height:2px;background:#13223a;border-radius:3px}
+.hero{position:relative;isolation:isolate;overflow:hidden;padding:75px 0 40px;background:linear-gradient(115deg,#fff 25%,#f4f9ff 79%,#dcefff)}
+.hero::before{content:"";position:absolute;right:-220px;top:60px;width:770px;height:770px;background:linear-gradient(130deg,#e2f3ff,#90d4ff);border-radius:50%;z-index:-1}
+.hero-grid{grid-template-columns:1.04fr .96fr;gap:15px;min-height:520px;align-items:center}
+.hero-copy{padding:10px 0 50px;position:relative;z-index:2}
+.hero-badge{background:#def4ff;color:#0a4b73;border-radius:100px;font-size:13px;margin-bottom:26px}
+.hero-badge::before{background:#079bd4}
+.hero h1{font-size:clamp(38px,4.5vw,64px);line-height:1.08;letter-spacing:-.05em;color:#101a2f;margin-bottom:25px}
+.hero h1 span{display:block;color:#00aedd}
+.hero-lead{font-size:17px;line-height:1.7;max-width:510px;margin-bottom:30px}
+.hero-cta{margin:0;gap:12px}
+.hero-cta .btn{border-radius:11px}
+.hero-visual{height:100%;min-height:510px;align-items:flex-end;overflow:visible}
+.hero-visual::before{content:"";position:absolute;inset:auto 0 0 2%;height:80%;border-radius:46% 50% 0 0;background:radial-gradient(circle at 70% 40%,rgba(255,255,255,.68),transparent 56%);z-index:-1}
+.hero-visual .hero-photo{display:block;width:auto;max-width:100%;height:min(560px,100%);object-fit:contain;object-position:center bottom;filter:drop-shadow(0 15px 22px rgba(33,62,91,.12))}
+.hero-proof{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin-top:-8px;position:relative;z-index:2}
+.hero-proof-card{min-width:0;display:flex;gap:15px;align-items:center;background:#fff;border:1px solid #e3eef9;box-shadow:0 10px 35px rgba(32,92,138,.08);padding:19px;border-radius:16px}
+.hero-proof-icon{display:grid;place-items:center;width:43px;height:43px;border-radius:12px;background:#e8f6ff;color:#008fd0;font-size:24px;font-weight:800;flex-shrink:0}
+.hero-proof-card strong{display:block;font-size:15px;line-height:1.3;color:#112038}
+.hero-proof-card small{display:block;font-size:12px;line-height:1.45;color:#62758b;margin-top:4px}
+.quiz-section{padding-top:72px;scroll-margin-top:88px}
+.quiz-card{scroll-margin-top:96px}
+@media(max-width:1120px){.header-nav{gap:12px}.header-phone span{display:none}.header-cta{font-size:12px}}
+@media(max-width:960px){
+ .hero-grid{grid-template-columns:1fr;gap:0;min-height:0}
+ .hero-copy{padding:0}
+ .hero-visual{order:2;max-width:570px;width:100%;min-height:0;height:380px;margin:18px auto 0}
+ .hero-visual .hero-photo{height:100%;width:100%;object-fit:contain;object-position:bottom}
+}
+@media(max-width:900px){
+ .header-inner{min-height:65px;flex-wrap:nowrap}
+ .menu-toggle{display:flex;order:3}
+ .header-phone{margin-left:auto;order:2}
+ .header-cta{display:none}
+ .header-nav{display:none}
+ .header.menu-open .header-nav{display:flex;position:absolute;top:100%;left:0;right:0;flex-direction:column;gap:0;padding:8px 16px;background:#fff;box-shadow:0 18px 24px rgba(14,41,73,.12);border:1px solid #e6eef9;border-radius:0 0 14px 14px}
+ .header.menu-open .header-nav a{padding:14px 8px;min-height:45px;border-bottom:1px solid #f1f5f9}
+ .hero{padding:44px 0 36px}
+ .hero-grid{grid-template-columns:1fr;gap:0;min-height:0}
+ .hero-copy{padding:0}
+ .hero h1{font-size:clamp(38px,7.1vw,58px)}
+ .hero-visual{order:2;max-width:570px;width:100%;min-height:0;height:380px;margin:18px auto 0}
+ .hero-visual .hero-photo{height:100%;width:100%;object-fit:contain;object-position:bottom}
+ .hero-proof{margin-top:16px}
+}
+@media(max-width:600px){
+ .container{padding-left:18px;padding-right:18px}
+ .logo-word--byt,.logo-word--teh{font-size:24px}
+ .logo-icon{width:37px;height:37px;margin:0 -2px}
+ .header-inner{min-height:62px;padding:8px 0}
+ .hero{padding-top:28px;padding-bottom:25px}
+ .hero::before{width:480px;height:480px;top:295px;right:-235px}
+ .hero-badge{font-size:11px;padding:6px 10px;margin-bottom:16px}
+ .hero h1{font-size:clamp(34px,9.5vw,45px);margin-bottom:15px}
+ .hero-lead{font-size:14px;line-height:1.55;margin-bottom:20px}
+ .hero-cta{display:grid;grid-template-columns:1fr;gap:10px}
+ .hero-cta .btn{min-height:46px;padding:12px 18px}
+ .hero-visual{height:345px;max-width:100%;margin-top:12px}
+ .hero-proof{grid-template-columns:1fr;gap:8px}
+ .hero-proof-card{padding:12px 15px;gap:12px}
+ .hero-proof-icon{width:37px;height:37px;font-size:21px}
+ .hero-proof-card strong{font-size:13px}
+ .hero-proof-card small{font-size:11px;margin-top:2px}
+ .quiz-section{padding:40px 0;scroll-margin-top:70px}
+}
+
+.logo-image{width:200px;height:auto;max-height:65px;object-fit:contain;object-position:left center}
+@media(max-width:600px){.logo-image{width:153px;max-height:42px}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header" id="header">
+  <div class="container header-inner">
+    <a href="#top" class="logo" aria-label="БытТех — на главную"><img class="logo-image" src="data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAAGGbWV0YQAAAAAAAAAhaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAAAAAAAOcGl0bQAAAAAAAQAAACxpbG9jAAAAAEQAAAIAAQAAAAEAAAjpAAAN4wACAAAAAQAAAa4AAAc7AAAAQmlpbmYAAAAAAAIAAAAaaW5mZQIAAAAAAQAAYXYwMUNvbG9yAAAAABppbmZlAgAAAAACAABhdjAxQWxwaGEAAAAAGmlyZWYAAAAAAAAADmF1eGwAAgABAAEAAADDaXBycAAAAJ1pcGNvAAAAFGlzcGUAAAAAAAABXgAAAF0AAAAQcGl4aQAAAAADCAgIAAAADGF2MUOBAAwAAAAAE2NvbHJuY2x4AAEADQAGgAAAAA5waXhpAAAAAAEIAAAADGF2MUOBABwAAAAAOGF1eEMAAAAAdXJuOm1wZWc6bXBlZ0I6Y2ljcDpzeXN0ZW1zOmF1eGlsaWFyeTphbHBoYQAAAAAeaXBtYQAAAAAAAAACAAEEAQKDBAACBAEFhgcAABUmbWRhdBIACgYYIau3GFQyrg5MjAjYAmLz+L2NK10klW1O6qMnN1b8ICEIlOb92xIgpkrhG9PVv2h/vj0Q7MoZwekoCBzZbm4QqZOe3jEoIts7TcFe2tBCjocRHQTgWgXq5cdqN07tFZxQtJw/byZuLB88XyRYiKTVnmLBwMmuYZ5XWUKdyJg8DgOUysB4qQowSZZu27FY46JPvxhk9wGnITJNuq47zR0pb4tHmV6tPFV3mRFJQqjlMXbNU21tJslbNehsfRXJentnve5liHDh0y5p9pqY0MxYsz/7nCwZUELTb5vrEKJ+Z7zUXf50o2jfe3o/49ROfOj2giQEi4ElyIDWJS6oTEp+Jn0lrmEzT7UfbTOGFwCMxOYeOkUnQlsFkv8CYpb1zYYwun+mvhZHzyrdRFuPGpULlrdfq+cyUDL5tQVG6R33mOnaYZDzJTflmmxmCTsoWhBtL4UdDu2Df5X6BGTn5tv9qEeogKDSXNu2e1ffzk05RtABjMAx4g8XXS4PihT6J4eFIiCo2fb9P8est98lsp4QqbCSXUDHXeuwPD5CJ8TUwCE7h4+v/V0VQQkl+Ya0jFunlARzj+eUtDg9LDbzZRMYU5bt/a714NZnAFlORW2XlP2ALWxb+Oanzda/rRVzDgILCELv0Lr+QKRmIaa9aO5aj00H3tQE95j4mZ5VfdMqOMU0YjExdnF2itmenglNAxlsMw/1P06PFhnYcMEyQq4lF3QNnam0PiHfaluFSJqqWCEXVcujw2w7xEgqJZZUVDvyEgOnKhFfnWbEPyfG9qI+COcgm4wywLr2qrzGQq/R2GyXHiBp/Dt3AQzHYNjaeM/UDT2mwBvjC/FN7+ySdSoH/4r4IPkMXbK3oGPvzoWvdgM8XKAaJh1Ny7TBYHjzV/pOnvLDnBZyFTwGAUethoyvR02DP6mVz5aT+7zeZK6bQQV3UG1lwi/TIMZbyqpLIg3dhZPeFriAAnw8oQzDd9WnnvIH1lb6dmUlqR1dE93kybsaoBDDWPv/P7ny1t2RWBBRXvIUvgUudQMaWLTO7uNJaE2Iv8nxkJNGdjA/XjipEysqnDo9Z7o22jkQoh/2Z720PfPf4G9KIoYofmS1oTdq/9wyk7ceMuOhZkFfTMwHoi5nXxjm0i7GzauDkSEamFv4umxxrWBspio7rLF+U2F9jKehkAL65tGip9aoOwM8H/2DLrpS2ZXN1aW9fbbCwJy/uHh4NCUDBXGKnxup4OcqTa/GocmSNwy9DFMskWueBHxOZZuilFx/qzxWbKQSY6T92rKeC+w4RqruR2L73h5riTulTGIvP/d1oS9Q3mNnVwC0PKDsA96QTx1e4wjNoTK7Tdm9hY097jA+wKrBaP7zsV7FZf62gK3e7IQ+NLiILtWiihQvqQxTZATYV9MNqWiqzVZq3L4Nx3R3lRkxZwAg5qdULGucqzDj5scSkDnXqUbOHqfJvhNpBxgVnVaC9BgZdbBLFCy7cHKtRDLMcbP3oQsJ4vfbHkgFre7X/eIxkJSQHLXQkj7+pEIFDUHj78OabGQk7dgfiuCikh+Y72r2FfwN6j5JMsWhFGk09VAo12hDBOR89vvoABq4wFHbRvJVnmmpj/3mQAZRdC8ZYVFySTm01iECid5giciCGTFidbTQ6q6N2X0HDGsEqjdT1uC/XIvJCkp3yWTufYnxeve3ofA8UrGBqcA0fXnnmjABow+anH0FfE0sJqu+p7RkwyZQ2EDatT8tAvJ4jDlHAVSqm1f6zZbDWXrIN+XS+//mU114Kb1J12+WCpauOJNAizhTMACfq8J3rSRPFKRwuhxcdwl73SxOjVgD/DGzuO6JTXH4LHROA6O3g5dWhXXoSKmI6PRJYl51f4A6gbrdkpzH1fnGWG28dmDpxj78fYyafCeL3klvYRxpkewzxFlOJgzcDLJexqD6AMOiR2eJU8tTpRax5m3i6mufs3fbDAbani5oIcQi0LThg0YyiUy1p3jUz7PrOIUSpwn/pl8Kfag8sQC07S6yNPLXEjVbfjcpPBAp78Rd//+XU/GVmabe3T55jH5x3Wj/S6qdiTHEWUSjgEpBIBqLK+12w2ZUO0PTZiusBzGe8XOh9IYDkAQNE3Ly+7oD1b7beXCCUxNeDLHgwU3saxFZcG4ZGdusLBPHCL1uIKui+o8apkwQdSne/D9yIapLgNfG8Z1uzY7UAOGjn0R1PjCcx7hNAS4zF7OINJ4xBWS+oVdYinJ+ysM1Yb4jdA6Esk6+r9nh4Ld8O+CFtsLVGZ2lXUzl0sq/SyJjrMeDnnXQBGShnI0qHxf8beWVIa17pLubmrX54nsWwMboZx/lS9eYUi0mkzjBe7FjyO6TOA8SGzOsigqxjOb3OhtjIudl+5sppJ4wXO6FJwsjSNeo1QKe87S5EghIDxBmCtXDzP3SQSAH0wZHsY8YzMOtCGWQK5AyhayogXwp5clA7ZDqeHEvtBIACgoYIau3GiAhoNCAMtIbEoHh4YhxhhCRpddJBtf+O5Y072CcnjC/3mbpB2cQi/amBLGyAKWc9TiEscMlRlKx5YWbL+3FxrrSG/jwMDMngBFyjyp1UZXKgAPgUls/Wigwt0KiXmpucvs75TfscAPVd0TkJJVtiG5xZ6LwYq8t/UiM7TGtHgb8mKZVMj6dkRolAQ+l8R8Y1KK+5osGre1SHOCnJvf57WIoaol8sz/awA+9XkanYOVYZ4v/v0I8rlabW0hxJBimES4ejeFqVOZ3jCHklXCD+iDH+zWIRdNC0P0Xf7cGndGSczI67uBtUnduSFIs1JrUyEGXzDfCiuU0PKqu/imIm8A7ry+v7pZgBg1sC/A2z8uoUv0XvWvcWiTrhpTrul7WDJ03B2GgQehg5o12/JT05dG37sDyRkk/uvrcH4N+97AT6swDcyfzNpGqyd8b5Z6isMCrRZrhSrguF/kksXiVKBcfNMNd3rc77DDWnuarDGkMsMJlrAd0SAHcvWEkJUwGT+wa+5riqodfUkXrUANxEZF2nGEF+zsgMXUpvWoTNb6m3Gb21ckD8DQFrOLiROlqJuLLBS38+ErBc/7+fPEkCfQdN2GkMMwA9q0C5LLdkWwTIIjelRq2LJ8ISiSkMI6MS5hdatzhD+kNZnu1pN/HAsDBTViBfL2J6gvWs1sXT4zbKPDf3CH3oYEwDGQfvG89arwhicyXDHGzWVjIB1Hq6lmTSnAfqvqx1kb9CFmmSyUThg40/cyOH22VBFVZHpFZDLnxuT5uaZkhyFTzMl5VtIHhXT9LcSmZVtLHbfOiVU+hUoAuowA8NV01Fo6iRxzZiUr+C/8IWZl4ODFlwhGmPABDFSOA2tLFBBOZfhz7rKF3YzkXddO938HIxggfd3XKuc9zuCSrOzEEopIsERVlCb5ZRs059xZooMxcsbQyE8JqxMe74rzHYkLeRtJV16LNEb2EFasE4YumZp66ZCRoSHtgCFttNgp5qdYFOdNe2QvLaHVffsDm0kzVgqRAShGYLcE79Xbq6Ocg44OxhwxCO0nI0YS9mLyCM9EjLLOFLw1BnATJuIahQmPScg9OA7+RQuZYgcacvFI4QGN73mrh42MWU1xgPWakzch6YuUn0MNshd26NIX+huGouy3bsko7smQep7bC8FO3WFdcJasHywFUOG30Ga7gyapdZpu5/Igju9/iSWMb+gEzrj6s1Y+I3YcC2DbYl3gBdgcvx2SGrrIOc5dphHSadPLoAo3Ar7noJzP8syM1zGVwGbbj3s9lv0+1goOs4R/Ai80pCQ/SRireoPPnKJU9VhtAzsb/hysY/KTCRZRfcMNsuIjm0/Msra2dnRq4qexlaOW2QUZABZCvsRJa/gkmU+KfnYWG7rOgGXpnz3nI9lVEDkdspjMTieOaKtLJJ4vI2ZQKbeODTNc7jftMwB5z0ekzJmrdMaBcQ8QN/eaGVGGXpsINZicRBIXWFGL4u6s9u/QYDXjgsL8XcOJtqgw0MXnOlLoyPMrcfB6lJwA6CIYp+HmC6i51f9Y9xCtiwPIKIDtq3iriPfgvAxhqyiUZAE7xPnoJsSGC0Pose9AJ7CW5uiy/nr348ufzs35sKJDYI7Sa8oGdY7cx/T2WSPSOyTuhSJqdoyPzHx0W9+TGBw0pWLftWZyp2Y8Mwd4K4k8UdIz1fLQfjXAYfPsPQZpf6JkP1r1/Ptb4cEVkUggvYQ24UIXvtYBY9BBAg+RJxE5VBjbwTjTIEJtTUn/POoBBPeh3FyQpKqd5ZXJHirk5in5WdFraX4BJJQU2vAqSxZ4YMDUQ0XqgEXRR4cbH3cdp2+Mv6EchSAVLXniMh/iRFWjLo/NqItmEtFeLNV2OtyQVOFPba8lPqHWKKpGX+mz0I39QNQlhR1mce2lOvKDQFPEBn5TyxOakhqPW+uBnaK51qoJtW/XwKSvq/bts1/cb+iarfhh5jpD3oWyrR7iELytfNsARcsyCeKfRix1o/zu5XMkX4kkYKX9o6d3hrjlRREF6V5Ao7Ww4ozJ/hH/bsdqxWqxXam5xfqddcICzvFp2ie8/mcOieq8lHQxzEs/ymGMDwzhf7fjz1aWU7J6sCkzGJ2Dy0jFibbMGmqG0Jsr0xMDBZDD9lDZTZDfFL3JlbqcCQ6tsat+KjJ+52xSZcTV1aOYZGjH4HruLqQi1lBNSrVKQPoj05RYyApOuPkUtOI9nZTfYyjf43jpvUlyHWQhRQdj3GtZL0J1eaYIgLDqs8yHfZx7dApOkFPeWlSEIrThWJPd/3KQGDUQmswXNUlP1I6XSLsSApnD+0Oi1sMRw5fKJz2Vmeqm7hrRbComsU86Ta8sTwXm+56UoXdZFkuv1a1Xqan0+FMThmq8raIyQeLeGiUlF1SWnzZKB+yLWf1R6XjWJBqNHq5f8lm6Gi5LvmF+VaFBwi3BW9ioEOEwzy/NjXslpyaSiJCA+aqUfD/9DE3yOboxYpbQyzFi+hvliLC77wXy6RvFb8DDYawXUzuwlf3cEOvWNAo2jXl/OYXGuLqob3pm3WrmYNNS5t4ohCjNOcqPaRcxIgaNTJvmxnToHkwv/p0Syr0mn5F/jpH7rSu90fdAUytKnl83xd6LorJaRNbdadBRjV3sBlR6qDJVKXVnxX4shE52nr7lAunt3AoKvAB17C+J15+z54fUn8I0231T3A3uKO2BuK1ur0mZmG8GLP49gW7HbSoQ+isoNsa5N4oddigNo2Qrfe3j/lMgW6oAOf13ekEBA8HsfKYT1fkYZo3UxwnynbpinNtNmzgXh0J+8FwYuip8V2hi2n3NDnvZMn4o2bMRR7EI27NUUThi3o/o0bsq6WEZRGPDNr1aZBh+EPXZ+zhX+E5srh1+lx/F2tI+YJTqG+DPodJLxddkV6ixfNaIMckwHJ6aYnC0NuXjuzVhPPYA11X4TRvCT86GLdbjKIwd6I3qANJQJ3KZ+Cuqn/Fec4fBvW3q6N3girB6cHnZ4t6JQCnqRVfwBQDZug2ymGepVSK/YRnbb4CezBhZUuzwqNnt/W1nh7BvTZvVEGVOq5Zi60VBRBAyhs6u0fbLyNXwzELi6qdIxv7iT9wNkiUYr+rZ8IldxGcqPTw4VFgX3SZIoRTiiSAZJcSHW9uIthccs4sOsmqIbX+cn6Zk6aWFOVIMRIRyBlZlzd5ge2PSNIF570su3eIB7SyY7UjZYA7BbVKQHcDfqcYNElZMsBb4X8TKWpG4l8iSXtLJpK9gFGWFclBFKant72vRALa2Rrv7d47cjYpIIVZdGj/RqRaRoRygz3kjv6hwPd+XxHpbi8G+bpIVS7+ZxST8UvGlNHUFjKN9sPysF4KP1YOpgppO444UIOqJo1X8p2o4WtlG+NAcc/1LvlgX8r7T87zfULCVM1+Ii7LtsUDKJQQQREuPLOlp6FOqfBAQ+wgtH+KmKDibiypTSPrK1883R7nqIIN/ddRxGDL2TWWytVZH9Kp0AedB+gwXTbMbR/3tlN7YbRCcBs1zJaMCK62C2iU8/i6EMiXJ0CMwQaWE8F60c0sYy3vmT6lF1dcWnIwh6ngHQ1Xde6qxQxMalIJDlNbL5njkTCLF84RdDziMSyOdmICbmbbtPBWDbK6XkydvT9OGp/DxMIlXeloPLKJ82wfanbEuiqGRYCOBge4NlPvmcHiWiZGo552qfZNGGClk7WXzf5+fGY43D6pRpvOEJgPW/pM7REuUqanWlOBbUV7BjG9iDvLT9xNXLEI0iQUmuTXjPCJL+y+hCuo/WYmC65GhPCoDL/Zpas/hb/SET9/Kx1nsGx6dNs/wxLNEUaiO6Oxj4m/uOo2RWPp4kTe60FdwqUv7eDtjIiT5elZCqQCeXoiX92FnfEEl+9AhWmJzYIfD/A6ce8AxvcDApiKc3FIqurbN+sA8LYTTWR5OeL873nFUSMTLGMMdQvZtFsTTDC2cOc16sgoK+Zq+47AggfVoKJk27DuRLs8osBBcynMVS5angYjdQiTdXRtkeJxlEP2GwLhG3M2ll8i/PFqKpkYV7IOlNVfPIL4uGibguDPkhyEExu56NoG0u7sUNoEt8QlwvQsooHIdtc+B2maZaQlAeJcSeBfF9MN8cp+fDydV2zSA/AYgMrUkk6iLtPg2E7FE86DImYBHMRkxaDqrjehjwd5iEJurJ2LCGcpN5KO8PHUefq2u0MVrCJbn4tJJTePdP/Hw2jYUXftsJuDK3J0vflZzhDC66LGHSNTbrb7VA6cjagoFXHjvAZmvx4AUgO3tLEPw3T8LS/uclHLw/0mn56QwW1ied+JVBEOSV4Gxh4SQne/HS831U+jdY1mdWBtfdVTxyBBSnGXJArVKvK9GZfV1B4XKujccrydv2w7Br2Gp9b8pl3Ng43xARB14Vjh4C6oW/MQnN4G4/inSoVgjOTCa8qB4GFKpiwgd3IXkgMbmqzKZUKtnwk6evPtX8MqM5sHBrfb36OHwkzyL1DJio6bkrWc6GOEhk/V7jJQfC1pG5Hf4FslYOmqxD0Z9bqD4fA0TxkW6abLcuS7kT2Cw2d6qHlcKf30Kyc14+FOFYjmIIYi+JAKCPf8lKU94+kYe8shyhusxmiBiGFXjLCsH1GMP//Mf5TYyPChHfv90l9FJBmaOk5Io1U+9ahoxkSFU56xA+Ry7ZGpqrqTJEmhcbGSGKZF0IN/tpnKpUqo36EgrWv1fwDHtOJw+sqO2B9zdP+KIBSCcsoA==" width="350" height="93" alt="БытТех" decoding="async"></a>
+    <nav class="header-nav" id="headerNav" aria-label="Основная навигация">
+      <a href="#prices">Цены</a>
+      <a href="#honesty">Честность</a>
+      <a href="#discounts">Скидки</a>
+      <a href="#how">Как вызвать</a>
+    </nav>
+    <button type="button" class="menu-toggle" id="menuToggle" aria-label="Открыть меню" aria-controls="headerNav" aria-expanded="false"><span></span><span></span><span></span></button>
+    <a href="tel:+78460000000" class="header-phone">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92z"/>
+      </svg>
+      <span>+7 (846) 000-00-00</span>
+    </a>
+    <a href="#quiz" class="btn btn-primary header-cta">Вызвать мастера</a>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero" id="top" aria-labelledby="heroTitle">
+  <div class="container hero-grid">
+    <div class="hero-copy">
+      <span class="hero-badge">Ремонт стиральных машин · Самара</span>
+      <h1 id="heroTitle">Ремонт <br>стиральных машин <span>на дому</span></h1>
+      <p class="hero-lead"><b>Олег — частный мастер с опытом 12 лет.</b> Ремонтирую стиральные машины в Самаре. В 90% случаев называю стоимость по телефону. Гарантия на работы — от 3 до 12 месяцев с талоном.</p>
+      <div class="hero-cta">
+        <a href="#quiz" class="btn btn-primary btn-lg">Вызвать мастера</a>
+        <a href="#prices" class="btn btn-outline btn-lg">Узнать цену</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <img class="hero-photo" src="data:image/avif;base64,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" width="310" height="446" loading="eager" decoding="async" fetchpriority="high" alt="Девушка рядом со стиральной машиной" />
+    </div>
+  </div>
+  <div class="container hero-proof" aria-label="Преимущества сервиса">
+    <div class="hero-proof-card"><span class="hero-proof-icon" aria-hidden="true">✓</span><div><strong>12 лет опыта</strong><small>Ремонт стиральных машин в Самаре</small></div></div>
+    <div class="hero-proof-card"><span class="hero-proof-icon" aria-hidden="true">◇</span><div><strong>Гарантия 3–12 месяцев</strong><small>Гарантийный талон на руки</small></div></div>
+    <div class="hero-proof-card"><span class="hero-proof-icon" aria-hidden="true">₽</span><div><strong>Честная стоимость</strong><small>Оценка по телефону в 90% случаев</small></div></div>
+  </div>
+</section>
+
+<!-- QUIZ -->
+<section class="quiz-section">
+  <div class="container">
+    <div class="quiz-card" id="quiz">
+      <div class="quiz-progress">
+        <span class="quiz-count" id="quizCount">Шаг 1 из 3</span>
+        <div class="quiz-progress-fill" id="quizProgress"></div>
+      </div>
+
+      <div class="quiz-step active" data-step="1">
+        <h3>Какая у вас марка машинки?</h3>
+        <p>Если не знаете точно — выберите «Другая»</p>
+        <div class="quiz-grid" data-field="brand">
+          <button type="button" class="quiz-opt" data-value="Bosch">Bosch</button>
+          <button type="button" class="quiz-opt" data-value="LG">LG</button>
+          <button type="button" class="quiz-opt" data-value="Samsung">Samsung</button>
+          <button type="button" class="quiz-opt" data-value="Indesit">Indesit</button>
+          <button type="button" class="quiz-opt" data-value="Ariston">Ariston</button>
+          <button type="button" class="quiz-opt" data-value="Siemens">Siemens</button>
+          <button type="button" class="quiz-opt" data-value="Electrolux">Electrolux</button>
+          <button type="button" class="quiz-opt" data-value="Whirlpool">Whirlpool</button>
+          <button type="button" class="quiz-opt" data-value="Atlant">Atlant</button>
+          <button type="button" class="quiz-opt" data-value="Zanussi">Zanussi</button>
+          <button type="button" class="quiz-opt" data-value="Haier">Haier</button>
+          <button type="button" class="quiz-opt" data-value="Beko">Beko</button>
+          <button type="button" class="quiz-opt" data-value="Candy">Candy</button>
+          <button type="button" class="quiz-opt" data-value="Другая">Другая / не знаю</button>
+        </div>
+      </div>
+
+      <div class="quiz-step" data-step="2">
+        <h3>Что случилось с машинкой?</h3>
+        <p>Выберите одну основную проблему</p>
+        <div class="quiz-grid" data-field="problem">
+          <button type="button" class="quiz-opt" data-value="Не сливает воду"><span class="emoji">💧</span>Не сливает воду</button>
+          <button type="button" class="quiz-opt" data-value="Не набирает воду"><span class="emoji">🚰</span>Не набирает воду</button>
+          <button type="button" class="quiz-opt" data-value="Не отжимает"><span class="emoji">🔄</span>Не отжимает</button>
+          <button type="button" class="quiz-opt" data-value="Не крутится барабан"><span class="emoji">🌀</span>Не крутится барабан</button>
+          <button type="button" class="quiz-opt" data-value="Не включается"><span class="emoji">⚡</span>Не включается</button>
+          <button type="button" class="quiz-opt" data-value="Не греет воду"><span class="emoji">🌡️</span>Не греет воду</button>
+          <button type="button" class="quiz-opt" data-value="Не открывается дверца"><span class="emoji">🚪</span>Не открывается дверца</button>
+          <button type="button" class="quiz-opt" data-value="Шумит при отжиме"><span class="emoji">🔊</span>Шумит при отжиме</button>
+          <button type="button" class="quiz-opt" data-value="Протекает"><span class="emoji">💦</span>Протекает</button>
+          <button type="button" class="quiz-opt" data-value="Показывает ошибку"><span class="emoji">❗</span>Показывает ошибку</button>
+          <button type="button" class="quiz-opt" data-value="Выбивает пробки"><span class="emoji">🔌</span>Выбивает пробки</button>
+          <button type="button" class="quiz-opt" data-value="Другое"><span class="emoji">❓</span>Другое / не знаю</button>
+        </div>
+      </div>
+
+      <div class="quiz-step" data-step="3">
+        <h3>Куда отправить расчёт?</h3>
+        <p>Перезвоню в течение 15 минут и назову цену</p>
+        <div class="quiz-form">
+          <input type="text" name="quizName" placeholder="Ваше имя" autocomplete="name" maxlength="100" required />
+          <input type="tel" name="quizPhone" placeholder="Телефон" autocomplete="tel" inputmode="tel" maxlength="40" required />
+          <div class="quiz-preferred">
+            <label class="quiz-field-label" for="preferredDate">Когда удобнее приехать?</label>
+            <div class="quiz-datetime">
+              <div><label class="quiz-field-hint" for="preferredDate">Дата</label><input type="date" id="preferredDate" name="preferredDate" required /></div>
+              <div><label class="quiz-field-hint" for="preferredTime">Время (Самара)</label>
+                <select id="preferredTime" name="preferredTime" required>
+                  <option value="">Выберите время</option>
+                  <option value="08:00">08:00–10:00</option><option value="10:00">10:00–12:00</option>
+                  <option value="12:00">12:00–14:00</option><option value="14:00">14:00–16:00</option>
+                  <option value="16:00">16:00–18:00</option><option value="18:00">18:00–20:00</option>
+                </select>
+              </div>
+            </div>
+            <p class="quiz-field-note">Это пожелание по времени: мастер подтвердит визит после звонка.</p>
+          </div>
+          <textarea name="quizComment" placeholder="Комментарий (необязательно)" maxlength="2000" rows="2"></textarea>
+          <input type="text" name="website" style="position:absolute;left:-9999px" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <p id="quizError" role="alert" style="color:#b42318;font-size:14px" hidden></p>
+        </div>
+      </div>
+
+      <div class="quiz-step" data-step="4">
+        <div class="quiz-success">
+          <div class="check">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <h3>Заявка отправлена!</h3>
+          <p style="color:var(--muted);margin-bottom:20px;font-size:14px">Мастер Олег перезвонит в течение 15 минут.</p>
+          <div class="quiz-summary">
+            <div class="quiz-summary-row"><span>Номер заявки</span><span id="sumRequest">—</span></div>
+            <div class="quiz-summary-row"><span>Марка</span><span id="sumBrand">—</span></div>
+            <div class="quiz-summary-row"><span>Поломка</span><span id="sumProblem">—</span></div>
+            <div class="quiz-summary-row"><span>Желаемое время</span><span id="sumPreferred">—</span></div>
+            <div class="quiz-summary-row"><span>Диагностика</span><span style="color:var(--green)">Бесплатно</span></div>
+          </div>
+          <a href="tel:+78460000000" class="btn btn-primary btn-block" style="margin-top:8px">
+            Позвонить: +7 (846) 000-00-00
+          </a>
+        </div>
+      </div>
+
+      <div class="quiz-nav" id="quizNav">
+        <button type="button" class="btn btn-outline" id="quizBack" disabled>← Назад</button>
+        <button type="button" class="btn btn-primary" id="quizNext" disabled>Далее →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HONESTY -->
+<section class="section section-alt" id="honesty">
+  <div class="container">
+    <div class="section-head center reveal">
+      <span class="section-label">Наши принципы</span>
+      <h2>Работаю честно — <em>без сюрпризов</em></h2>
+      <p>Три правила, которые отличают меня от сервисов с «умными» мастерами</p>
+    </div>
+    <div class="features reveal">
+      <div class="feature">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92z"/>
+          </svg>
+        </div>
+        <h3>Цену говорю сразу</h3>
+        <p>В 90% случаев называю стоимость ремонта уже по телефону. Не люблю «приеду — посмотрю — назову».</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2 4 6v6c0 5 3.5 9.7 8 10 4.5-.3 8-5 8-10V6l-8-4z"/>
+            <path d="m9 12 2 2 4-4"/>
+          </svg>
+        </div>
+        <h3>Цена не меняется</h3>
+        <p>Сумму фиксирую после диагностики. В процессе ремонта цена не растёт. Никаких «нашёл ещё одну поломку».</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="9" y1="15" x2="15" y2="15"/>
+            <line x1="9" y1="11" x2="15" y2="11"/>
+          </svg>
+        </div>
+        <h3>Всё официально</h3>
+        <p>Работаю как самозанятый. Гарантийный талон — на руки. Чек — электронный через «Мой налог».</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DISCOUNTS -->
+<section class="section" id="discounts">
+  <div class="container">
+    <div class="section-head center reveal">
+      <span class="section-label">Льготы и скидки</span>
+      <h2>Скидка 10% на работу <em>тем, кому важно</em></h2>
+      <p>Для двух категорий клиентов делаю скидку на работу мастера — без документов, верю на слово</p>
+    </div>
+    <div class="discounts reveal">
+      <div class="discount-card">
+        <div class="discount-icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>
+        <div class="discount-info">
+          <div class="pct">−10%</div>
+          <h3>Пенсионерам</h3>
+          <p>Скидка на все работы мастера. Запчасти — по закупочной цене, без накрутки. Скажите о пенсии при звонке — пересчитаю сразу.</p>
+        </div>
+      </div>
+      <div class="discount-card">
+        <div class="discount-icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2 4 6v6c0 5 3.5 9.7 8 10 4.5-.3 8-5 8-10V6l-8-4z"/>
+            <path d="m9 12 2 2 4-4"/>
+          </svg>
+        </div>
+        <div class="discount-info">
+          <div class="pct">−10%</div>
+          <h3>Участникам СВО и семьям</h3>
+          <p>Скидка на работу мастера для участников СВО и членов их семей. Запчасти — по закупочной цене. Скажите при звонке — пересчитаю сразу.</p>
+        </div>
+      </div>
+    </div>
+    <p class="reveal" style="text-align:center;color:var(--muted);font-size:13px;margin-top:28px;max-width:600px;margin-left:auto;margin-right:auto;line-height:1.7">
+      Скидка 10% распространяется только на работу мастера. Стоимость запчастей указана отдельно и не облагается скидкой. Документы не требую — верю на слово.
+    </p>
+  </div>
+</section>
+
+<!-- ADVANTAGES -->
+<section class="section section-alt" id="features">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="section-label">Почему меня вызывают снова</span>
+      <h2>Ремонт без накруток <em>и лишних замен</em></h2>
+    </div>
+    <div class="features reveal">
+      <div class="feature">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <h3>12+ лет опыта в Самаре</h3>
+        <p>Каждый день — по 2–3 вызова. Знаю, как ведут себя все бренды и модели, которые встречаются в городе.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6 9 17l-5-5"/>
+          </svg>
+        </div>
+        <h3>Только оригинал</h3>
+        <p>Запчасти под замену — оригинальные, от проверенных поставщиков. Это даёт долгую работу и гарантию.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+            <path d="M21 3v5h-5"/>
+            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+            <path d="M8 16H3v5"/>
+          </svg>
+        </div>
+        <h3>Подбор аналогов</h3>
+        <p>Если завод снял запчасть с производства — подберу качественный аналог.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2 4 6v6c0 5 3.5 9.7 8 10 4.5-.3 8-5 8-10V6l-8-4z"/>
+            <path d="m9 12 2 2 4-4"/>
+          </svg>
+        </div>
+        <h3>Гарантия от 3 мес. до 1 года</h3>
+        <p>Точный срок зависит от типа поломки. Выдаю бумажный гарантийный талон на руки — там указан срок и что покрывается.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="6" width="20" height="12" rx="2"/>
+            <path d="M2 10h20"/>
+          </svg>
+        </div>
+        <h3>Оплата после ремонта</h3>
+        <p>Наличными, картой или переводом. Только после проверки работы.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <h3>7 дней в неделю, 8:00–20:00</h3>
+        <p>Включая выходные и праздники. Выезд в день обращения по Самаре. Заявки принимаю круглосуточно — перезвоню утром.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICES -->
+<section class="section" id="prices">
+  <div class="container">
+    <div class="section-head center reveal">
+      <span class="section-label">Ориентировочные цены · 2026</span>
+      <h2>Порядок цен на ремонт <em>в Самаре</em></h2>
+      <p>Точную стоимость назову только после диагностики — она зависит от модели машинки, конкретного узла и цены запчасти. Ниже — чтобы вы понимали порядок цен.</p>
+    </div>
+    <div class="price-grid reveal">
+      <div class="price-card"><h3>Диагностика в черте города</h3><div class="price-val">от 500 ₽</div></div>
+      <div class="price-card"><h3>Диагностика при последующем ремонте</h3><div class="price-val free">бесплатно</div></div>
+      <div class="price-card"><h3>Не заливает воду</h3><div class="price-val">от 1 000 ₽</div></div>
+      <div class="price-card"><h3>Не сливает воду</h3><div class="price-val">от 1 200 ₽</div></div>
+      <div class="price-card"><h3>Ремонт электроники</h3><div class="price-val">от 2 600 ₽</div></div>
+      <div class="price-card"><h3>Замена подшипников</h3><div class="price-val">от 4 000 ₽</div></div>
+      <div class="price-card"><h3>Замена амортизаторов</h3><div class="price-val">от 1 600 ₽</div></div>
+      <div class="price-card"><h3>Замена манжеты люка</h3><div class="price-val">от 1 500 ₽</div></div>
+      <div class="price-card"><h3>Не вращается барабан</h3><div class="price-val">от 1 600 ₽</div></div>
+      <div class="price-card"><h3>Замена ТЭНа</h3><div class="price-val">от 1 000 ₽</div></div>
+      <div class="price-card"><h3>Замена УБЛ (замок люка)</h3><div class="price-val">от 1 000 ₽</div></div>
+      <div class="price-card"><h3>Замена ручки дверцы</h3><div class="price-val">от 1 000 ₽</div></div>
+      <div class="price-card"><h3>Замена ремня привода</h3><div class="price-val">от 800 ₽</div></div>
+      <div class="price-card"><h3>Извлечение постороннего предмета</h3><div class="price-val">от 1 600 ₽</div></div>
+    </div>
+    <div class="price-note reveal">
+      <p style="margin-bottom:10px"><strong>⚠️ Цены ориентировочные — окончательная сумма зависит от:</strong></p>
+      <ul>
+        <li>Модели и бренда вашей машинки</li>
+        <li>Конкретного узла и степени износа</li>
+        <li>Стоимости запчасти на момент ремонта</li>
+        <li>Сложности разборки (встраиваемые и узкие — дороже)</li>
+      </ul>
+      <p>Точную сумму мастер назовёт <strong>после диагностики</strong> — и она уже не изменится в процессе ремонта. Цены на сайте не являются публичной офертой.</p>
+    </div>
+  </div>
+</section>
+
+<!-- COMPLAINTS -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-head center reveal">
+      <span class="section-label">Частые обращения</span>
+      <h2>С чем ко мне <em>приходят</em></h2>
+    </div>
+    <div class="pills reveal">
+      <span class="pill">Не сливает воду</span>
+      <span class="pill">Набирает и сразу сливает</span>
+      <span class="pill">Не набирает воду</span>
+      <span class="pill">Не крутится барабан</span>
+      <span class="pill">Долго стирает</span>
+      <span class="pill">Не блокируется дверь</span>
+      <span class="pill">Не включается</span>
+      <span class="pill">Не отжимает</span>
+      <span class="pill">Не греет воду</span>
+      <span class="pill">Протекает</span>
+      <span class="pill">Моргает лампочка</span>
+      <span class="pill">Показывает ошибку</span>
+      <span class="pill">Выбивает пробки</span>
+      <span class="pill">Шумит при отжиме</span>
+      <span class="pill">Стучит барабан</span>
+    </div>
+  </div>
+</section>
+
+<!-- HOW -->
+<section class="section" id="how">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="section-label">Простой путь</span>
+      <h2>Как вызвать <em>мастера</em></h2>
+    </div>
+    <div class="steps reveal">
+      <div class="step">
+        <div class="step-num">01</div>
+        <h3>Заявка</h3>
+        <p>Звоните по телефону или оставьте заявку на сайте. Сообщите модель техники и что именно не работает.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <h3>Согласуем время</h3>
+        <p>Свяжусь в течение 30 минут. Подберём удобное время для выезда, обычно — в день обращения.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <h3>Ремонт на месте</h3>
+        <p>Проведу бесплатную диагностику, назову стоимость и после согласия починю. Проверю на всех режимах.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- IMPORTANT -->
+<section class="section section-alt">
+  <div class="container">
+    <div class="section-head center reveal">
+      <span class="section-label">Честно и без разводов</span>
+      <h2>Важно <em>знать</em></h2>
+    </div>
+    <div class="warnings reveal">
+      <div class="warning">
+        <span class="warning-icon">📞</span>
+        <p><strong>В 90% случаев называю цену сразу по телефону.</strong> Опишите поломку и модель — скажу ориентировочную стоимость ещё до выезда. Оставшиеся 10% — сложные случаи, где нужно смотреть на месте.</p>
+      </div>
+      <div class="warning">
+        <span class="warning-icon">🛡️</span>
+        <p><strong>Цена фиксируется после диагностики и не растёт в процессе.</strong> Никаких сюрпризов в конце ремонта.</p>
+      </div>
+      <div class="warning">
+        <span class="warning-icon">📜</span>
+        <p><strong>Гарантийный талон выдаю на руки, чек — электронный.</strong> После ремонта получите бумажный талон с точным сроком гарантии. Чек придёт электронно через «Мой налог».</p>
+      </div>
+      <div class="warning">
+        <span class="warning-icon">✅</span>
+        <p><strong>Работаю официально как самозанятый.</strong> На каждую работу пробиваю чек в приложении «Мой налог» — он приходит вам электронно. Это подтверждает оплату и защищает обе стороны.</p>
+      </div>
+      <div class="warning">
+        <span class="warning-icon">🚫</span>
+        <p><strong>Избегайте мастерских с подозрительно низкой ценой.</strong> Качественный ремонт не может стоить дёшево.</p>
+      </div>
+      <div class="warning">
+        <span class="warning-icon">💬</span>
+        <p><strong>Есть сомнения? Звоните напрямую.</strong> Задам пару вопросов и скажу, нужен ли вообще выезд.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DISTRICTS -->
+<section class="section" id="districts">
+  <div class="container">
+    <div class="section-head center reveal">
+      <span class="section-label">Вся Самара</span>
+      <h2>Работаю <em>по Самаре</em></h2>
+    </div>
+    <div class="districts reveal">
+      <div class="district">Железнодорожный</div>
+      <div class="district">Куйбышевский</div>
+      <div class="district">Промышленный</div>
+      <div class="district">Кировский</div>
+      <div class="district">Ленинский</div>
+      <div class="district">Самарский</div>
+      <div class="district">Красноглинский</div>
+      <div class="district">Октябрьский</div>
+      <div class="district">Советский</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="section section-alt" id="order">
+  <div class="container">
+    <div class="cta-wrap reveal">
+      <h2>Машинка сломалась? <em>Починим сегодня.</em></h2>
+      <p>Позвоните — назову ориентировочную стоимость по телефону и приеду в удобное время. Работаю по Самаре. Точную сумму зафиксирую после диагностики.</p>
+      <a href="tel:+78460000000" class="btn btn-primary btn-lg">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92z"/>
+        </svg>
+        +7 (846) 000-00-00
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="#top" class="logo" aria-label="БытТех — на главную"><img class="logo-image" src="data:image/avif;base64,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" width="350" height="93" alt="БытТех" decoding="async"></a>
+        <p>Самозанятый Олег — ремонт стиральных машин на дому в Самаре. 12 лет опыта, оригинальные запчасти, гарантия от 3 месяцев до года. На каждую работу выдаю бумажный гарантийный талон, чек — электронный через «Мой налог».</p>
+        <p class="footer-legal">
+          Самозанятый · Плательщик налога на профессиональный доход (НПД).<br>
+          Работаю по Самаре.<br>
+          Чек формирую в приложении «Мой налог». Цены на сайте носят информационный характер и не являются публичной офертой.
+        </p>
+      </div>
+      <div class="footer-col">
+        <h5>Контакты</h5>
+        <a href="tel:+78460000000">+7 (846) 000-00-00</a>
+        <a href="https://wa.me/78460000000">WhatsApp</a>
+        <a href="https://t.me/oleg_samara">Telegram</a>
+      </div>
+      <div class="footer-col">
+        <h5>Разделы</h5>
+        <a href="#prices">Цены</a>
+        <a href="#honesty">Честность</a>
+        <a href="#discounts">Скидки</a>
+        <a href="#how">Как вызвать</a>
+        <a href="#districts">Районы</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span id="year"></span> Быттех · Самозанятый · Самара</span>
+      <span>Работаю 7 дней в неделю · 8:00–20:00</span>
+    </div>
+  </div>
+</footer>
+
+<a href="tel:+78460000000" class="float-call" aria-label="Позвонить">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92z"/>
+  </svg>
+</a>
+
+<script>
+
+  const menuToggle=document.getElementById('menuToggle');
+  if(menuToggle){
+    const closeMenu=()=>{header.classList.remove('menu-open');menuToggle.setAttribute('aria-expanded','false');menuToggle.setAttribute('aria-label','Открыть меню');};
+    menuToggle.addEventListener('click',()=>{const expanded=header.classList.toggle('menu-open');menuToggle.setAttribute('aria-expanded',String(expanded));menuToggle.setAttribute('aria-label',expanded?'Закрыть меню':'Открыть меню');});
+    document.querySelectorAll('#headerNav a').forEach(a=>a.addEventListener('click',closeMenu));
+    document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMenu();});
+    document.addEventListener('click',e=>{if(!header.contains(e.target))closeMenu();});
+  }
+
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  const header = document.getElementById('header');
+  window.addEventListener('scroll', () => {
+    header.classList.toggle('scrolled', window.scrollY > 10);
+  }, {passive:true});
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+    });
+  }, {threshold:0.1, rootMargin:'0px 0px -40px 0px'});
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+  const counters = document.querySelectorAll('[data-count]');
+  const cIo = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      const el = e.target;
+      const target = +el.dataset.count;
+      const suffix = el.dataset.suffix || '';
+      const dur = 1400;
+      const start = performance.now();
+      (function tick(now){
+        const p = Math.min((now - start) / dur, 1);
+        const eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.floor(target * eased).toLocaleString('ru-RU') + suffix;
+        if (p < 1) requestAnimationFrame(tick);
+      })(start);
+      cIo.unobserve(el);
+    });
+  }, {threshold:0.5});
+  counters.forEach(c => cIo.observe(c));
+
+</script>
+<script src="/request-form.js" defer></script>
+</body>
+</html>

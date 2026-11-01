@@ -12,6 +12,7 @@ from telegram.ext import (Application, CallbackQueryHandler, CommandHandler,
                           ContextTypes, MessageHandler, filters)
 from storage import Store, SlotUnavailable, canonical_phone
 from scheduling import SAMARA, booking_days
+from webapp import start_website, stop_website, close_storage
 
 ROOT = Path(__file__).resolve().parent
 BUTTON_DEFAULTS = {
@@ -125,9 +126,16 @@ async def admin_page(update, context):
     rows = store(context).page(kind, page, limit)
     entries = []
     for row in rows[:limit]:
-        text = f'{display_time(row["created"])}\n{row["name"]} (ID {row["user_id"] if kind == "requests" else row["id"]})'
+        identity = row['user_id'] if kind == 'requests' else row['id']
+        text = f'{display_time(row["created"])}\n{row["name"]}'
+        if identity is not None:
+            text += f' (ID {identity})'
         if kind == 'requests':
             text += f'\nЗаявка №{row["id"]}\nТелефон: {row["phone"]}\nПроблема: {row["problem"]}\nЗапись: {(row["booking"] or "не указана")}'
+            text += '\nИсточник: ' + ('сайт' if row['source'] == 'website' else 'Telegram')
+            if row['source'] == 'website':
+                text += f'\nМарка: {row["brand"]}\nКомментарий: {row["comment"] or "—"}'
+                text += f'\nЖелаемое время: {row["preferred_date"] or "не указано"} {row["preferred_time"] or ""} (ожидает подтверждения)'
         entries.append(text)
     buttons = []
     if page:
@@ -333,6 +341,7 @@ async def configure_commands(application):
         except TelegramError:
             logging.getLogger(__name__).warning(
                 'Не удалось настроить меню администратора %s. Откройте чат с ботом и перезапустите его.', uid)
+    await start_website(application)
 
 
 def main():
@@ -348,7 +357,8 @@ def main():
     path = Path(os.getenv('DATABASE_PATH', 'data/bot.sqlite3'))
     if not path.is_absolute():
         path = ROOT / path
-    app = Application.builder().token(token).post_init(configure_commands).build()
+    app = (Application.builder().token(token).post_init(configure_commands)
+           .post_stop(stop_website).post_shutdown(close_storage).build())
     app.bot_data.update(store=Store(path), admins=admins)
     app.add_handler(CommandHandler('start', start, filters.ChatType.PRIVATE))
     app.add_handler(CommandHandler('myid', myid, filters.ChatType.PRIVATE))
@@ -365,3 +375,4 @@ def main():
 if __name__ == '__main__':
     logging.basicConfig(level=logging.WARNING)
     main()
+

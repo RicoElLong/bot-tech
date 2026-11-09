@@ -330,6 +330,22 @@
 
 .logo-image{width:200px;height:auto;max-height:65px;object-fit:contain;object-position:left center}
 @media(max-width:600px){.logo-image{width:153px;max-height:42px}}
+
+/* Service price rows (symptoms) */
+.service-section{position:relative;scroll-margin-top:95px}
+.service-anchor{position:absolute;top:-95px;width:1px;height:1px}
+.services-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.service-row{display:flex;align-items:center;gap:16px;background:#fff;border:1px solid #dae6f1;border-radius:13px;padding:20px 23px;min-height:90px;transition:border-color .2s,box-shadow .2s}
+.service-row:hover{border-color:#80cdec;box-shadow:0 6px 24px rgba(16,70,110,.07)}
+.service-index{flex:none;font-size:13px;color:#87a8bb;font-weight:800;letter-spacing:.04em}
+.service-row h3{margin:0;flex:1;min-width:0;font-size:16px;line-height:1.4;font-weight:700;color:#172438}
+.service-price{flex:none;font-size:18px;font-weight:800;letter-spacing:-.02em;color:var(--blue-dark);white-space:nowrap}
+.service-action{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-top:24px;padding:22px 26px;border-radius:13px;background:#edf8ff}
+.service-action p{font-size:15px;color:#284a63;line-height:1.5}
+.service-action .btn{flex-shrink:0}
+.service-subhead{margin-top:75px;margin-bottom:30px}
+@media(max-width:840px){.services-grid{grid-template-columns:1fr}}
+@media(max-width:600px){.service-row{padding:15px;gap:11px;min-height:70px}.service-row h3{font-size:14px}.service-price{font-size:15px}.service-index{font-size:11px}.service-action{flex-direction:column;align-items:stretch;padding:18px}.service-action .btn{width:100%}.service-subhead{margin-top:50px}}
 </style>
 </head>
 <body>
@@ -339,7 +355,7 @@
   <div class="container header-inner">
     <a href="#top" class="logo" aria-label="БытТех — на главную"><img class="logo-image" src="data:image/avif;base64,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" width="350" height="93" alt="БытТех" decoding="async"></a>
     <nav class="header-nav" id="headerNav" aria-label="Основная навигация">
-      <a href="#prices">Цены</a>
+      <a href="#services">Услуги и цены</a>
       <a href="#honesty">Честность</a>
       <a href="#discounts">Скидки</a>
       <a href="#how">Как вызвать</a>
@@ -643,24 +659,41 @@
   </div>
 </section>
 
-<!-- PRICES -->
-<section class="section" id="prices">
+<!-- PRICES / SERVICES -->
+<section class="section service-section" id="services" aria-labelledby="servicesTitle">
+  <span class="service-anchor" id="prices" aria-hidden="true"></span>
   <div class="container">
     <div class="section-head center reveal">
-      <span class="section-label">Ориентировочные цены · 2026</span>
-      <h2>Порядок цен на ремонт <em>в Самаре</em></h2>
-      <p>Точную стоимость назову только после диагностики — она зависит от модели машинки, конкретного узла и цены запчасти. Ниже — чтобы вы понимали порядок цен.</p>
+      <span class="section-label">Услуги и цены · Самара</span>
+      <h2 id="servicesTitle">Ремонт стиральных машин <em>на дому</em></h2>
+      <p>Не знаете причину поломки? Выберите, что происходит с машинкой. Это стартовая стоимость работы — точную цену назову после диагностики и согласую до ремонта.</p>
+    </div>
+    <div class="services-grid reveal" role="list" aria-label="Стоимость ремонта по характеру неисправности">
+      <div class="service-row" role="listitem"><span class="service-index" aria-hidden="true">01</span><h3>Не вращается барабан</h3><span class="service-price">от 1 250 ₽</span></div>
+      <div class="service-row" role="listitem"><span class="service-index" aria-hidden="true">02</span><h3>Не нагревает воду</h3><span class="service-price">от 1 300 ₽</span></div>
+      <div class="service-row" role="listitem"><span class="service-index" aria-hidden="true">03</span><h3>Протекает стиральная машина</h3><span class="service-price">от 1 350 ₽</span></div>
+      <div class="service-row" role="listitem"><span class="service-index" aria-hidden="true">04</span><h3>Не сливает воду</h3><span class="service-price">от 1 300 ₽</span></div>
+      <div class="service-row" role="listitem"><span class="service-index" aria-hidden="true">05</span><h3>Не отжимает</h3><span class="service-price">от 1 400 ₽</span></div>
+      <div class="service-row" role="listitem"><span class="service-index" aria-hidden="true">06</span><h3>Сильно шумит</h3><span class="service-price">от 1 250 ₽</span></div>
+      <div class="service-row" role="listitem"><span class="service-index" aria-hidden="true">07</span><h3>Не включается</h3><span class="service-price">от 1 300 ₽</span></div>
+      <div class="service-row" role="listitem"><span class="service-index" aria-hidden="true">08</span><h3>Не набирает воду</h3><span class="service-price">от 1 300 ₽</span></div>
+    </div>
+    <div class="service-action reveal">
+      <p>Расскажите о неисправности — помогу определить, какой ремонт нужен.</p>
+      <a href="#quiz" class="btn btn-primary">Оставить заявку</a>
+    </div>
+    <div class="section-head center reveal service-subhead">
+      <span class="section-label">Дополнительный прайс</span>
+      <h2>Стоимость <em>отдельных работ</em></h2>
+      <p>Если причина уже известна, посмотрите примерную стоимость конкретной операции.</p>
     </div>
     <div class="price-grid reveal">
       <div class="price-card"><h3>Диагностика в черте города</h3><div class="price-val">от 500 ₽</div></div>
       <div class="price-card"><h3>Диагностика при последующем ремонте</h3><div class="price-val free">бесплатно</div></div>
-      <div class="price-card"><h3>Не заливает воду</h3><div class="price-val">от 1 000 ₽</div></div>
-      <div class="price-card"><h3>Не сливает воду</h3><div class="price-val">от 1 200 ₽</div></div>
       <div class="price-card"><h3>Ремонт электроники</h3><div class="price-val">от 2 600 ₽</div></div>
       <div class="price-card"><h3>Замена подшипников</h3><div class="price-val">от 4 000 ₽</div></div>
       <div class="price-card"><h3>Замена амортизаторов</h3><div class="price-val">от 1 600 ₽</div></div>
       <div class="price-card"><h3>Замена манжеты люка</h3><div class="price-val">от 1 500 ₽</div></div>
-      <div class="price-card"><h3>Не вращается барабан</h3><div class="price-val">от 1 600 ₽</div></div>
       <div class="price-card"><h3>Замена ТЭНа</h3><div class="price-val">от 1 000 ₽</div></div>
       <div class="price-card"><h3>Замена УБЛ (замок люка)</h3><div class="price-val">от 1 000 ₽</div></div>
       <div class="price-card"><h3>Замена ручки дверцы</h3><div class="price-val">от 1 000 ₽</div></div>
@@ -668,14 +701,13 @@
       <div class="price-card"><h3>Извлечение постороннего предмета</h3><div class="price-val">от 1 600 ₽</div></div>
     </div>
     <div class="price-note reveal">
-      <p style="margin-bottom:10px"><strong>⚠️ Цены ориентировочные — окончательная сумма зависит от:</strong></p>
+      <p><strong>Окончательная стоимость зависит от модели, состояния техники и сложности ремонта.</strong></p>
       <ul>
-        <li>Модели и бренда вашей машинки</li>
-        <li>Конкретного узла и степени износа</li>
-        <li>Стоимости запчасти на момент ремонта</li>
-        <li>Сложности разборки (встраиваемые и узкие — дороже)</li>
+        <li>Стоимость запчастей рассчитывается отдельно.</li>
+        <li>Диагностика при последующем ремонте бесплатна.</li>
+        <li>Цена согласовывается с клиентом до начала работ.</li>
       </ul>
-      <p>Точную сумму мастер назовёт <strong>после диагностики</strong> — и она уже не изменится в процессе ремонта. Цены на сайте не являются публичной офертой.</p>
+      <p>Цены ориентировочные, указаны «от» и не являются публичной офертой.</p>
     </div>
   </div>
 </section>

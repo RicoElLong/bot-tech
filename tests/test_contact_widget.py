@@ -14,8 +14,9 @@ class ContactWidgetTests(unittest.TestCase):
     def test_all_call_links_use_real_contact(self):
         self.assertNotIn("tel:+78460000000", self.html)
         self.assertNotIn("+7 (846) 000-00-00", self.html)
-        self.assertGreaterEqual(self.html.count('href="tel:+79053031551"'), 5)
-        self.assertIn("+7 (905) 303-15-51", self.html)
+        self.assertGreaterEqual(self.html.count('href="tel:{{OWNER_PHONE_E164}}"'), 5)
+        self.assertIn('{{OWNER_PHONE}}', self.html)
+        self.assertIn("const PHONE = '{{OWNER_PHONE_E164}}';", self.html)
 
     def test_max_widget_is_accessible_and_has_fallback(self):
         for part in ('id="maxFab"', 'aria-controls="maxCard"',

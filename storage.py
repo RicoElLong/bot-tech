@@ -81,6 +81,10 @@ class Store:
                 self.db.execute('ALTER TABLE requests ADD COLUMN preferred_date TEXT')
             if 'preferred_time' not in columns:
                 self.db.execute('ALTER TABLE requests ADD COLUMN preferred_time TEXT')
+            if 'consent_version' not in columns:
+                self.db.execute('ALTER TABLE requests ADD COLUMN consent_version TEXT')
+            if 'consent_recorded_at' not in columns:
+                self.db.execute('ALTER TABLE requests ADD COLUMN consent_recorded_at TEXT')
             self.db.execute('''CREATE TABLE IF NOT EXISTS web_submissions (
                 submission_id TEXT PRIMARY KEY, payload_hash TEXT NOT NULL,
                 request_id INTEGER NOT NULL, created TEXT NOT NULL)''')
@@ -178,12 +182,12 @@ class Store:
                 return existing, False
             timestamp = now()
             row = self.db.execute('''INSERT INTO requests
-                (id,user_id,phone,problem,created,source,contact_name,brand,comment,preferred_date,preferred_time)
+                (id,user_id,phone,problem,created,source,contact_name,brand,comment,preferred_date,preferred_time,consent_version,consent_recorded_at)
                 VALUES((SELECT COALESCE(MAX(id),0)+1 FROM (
                     SELECT id FROM requests UNION ALL SELECT id FROM request_tombstones)),
-                    NULL,?,?,?,'website',?,?,?,?,?) RETURNING id''',
+                    NULL,?,?,?,'website',?,?,?,?,?,?,?) RETURNING id''',
                 (data['phone'], data['problem'], timestamp, data['name'], data['brand'], data['comment'],
-                 data['preferred_date'],data['preferred_time'])).fetchone()
+                 data['preferred_date'],data['preferred_time'],data['consent_version'],timestamp)).fetchone()
             request_id = row['id']
             self.db.execute('INSERT INTO web_submissions VALUES(?,?,?,?)',
                             (submission_id, payload_hash, request_id, timestamp))

@@ -346,6 +346,27 @@
 .service-subhead{margin-top:75px;margin-bottom:30px}
 @media(max-width:840px){.services-grid{grid-template-columns:1fr}}
 @media(max-width:600px){.service-row{padding:15px;gap:11px;min-height:70px}.service-row h3{font-size:14px}.service-price{font-size:15px}.service-index{font-size:11px}.service-action{flex-direction:column;align-items:stretch;padding:18px}.service-action .btn{width:100%}.service-subhead{margin-top:50px}}
+
+/* MAX floating contact widget: no external tracking until consent/configuration */
+.max-fab{position:fixed;z-index:94;right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));border:0;border-radius:21px;width:64px;height:64px;background:#285df2;color:#fff;box-shadow:0 9px 27px rgba(17,78,169,.35);display:grid;place-content:center;gap:0;text-align:center;cursor:pointer;transition:transform .2s}
+.max-fab:hover{transform:translateY(-2px)}
+.max-fab svg{display:block;width:32px;height:29px;margin:auto}
+.max-fab span{font-size:12px;font-weight:800;line-height:1.2}
+.max-fab:focus-visible,.max-card a:focus-visible,.max-card button:focus-visible{outline:3px solid #ffcb52;outline-offset:3px}
+.max-card[hidden],.max-card [hidden]{display:none!important}
+.max-card{position:fixed;z-index:93;right:20px;bottom:calc(97px + env(safe-area-inset-bottom,0px));width:min(345px,calc(100vw - 32px));max-height:min(530px,calc(100dvh - 110px));overflow-y:auto;padding:22px;border:1px solid #d6e2f7;border-radius:16px;background:white;color:#1a2332;box-shadow:0 20px 55px rgba(18,45,84,.22)}
+.max-card-head{display:flex;align-items:flex-start;gap:8px;justify-content:space-between;margin-bottom:10px}
+.max-card h2{font-size:20px;font-weight:800;line-height:1.2}
+.max-card-close{border:0;background:#edf4ff;border-radius:8px;width:34px;height:34px;font-size:23px;line-height:1;cursor:pointer;color:#12345d;flex-shrink:0}
+.max-card-number{display:block;font-size:23px;font-weight:800;color:#17263e;margin-bottom:12px;letter-spacing:-.02em}
+.max-card p{font-size:13px;line-height:1.6;color:#53647c;margin-bottom:15px}
+.max-card-actions{display:grid;gap:8px}
+.max-card-action{display:grid;place-items:center;padding:12px 14px;min-height:44px;border-radius:9px;border:1px solid #bcd2f0;color:#154d8c;background:#fff;font-family:inherit;font-weight:700;font-size:14px;text-align:center;cursor:pointer}
+.max-card-action--main{background:#285df2;border-color:#285df2;color:#fff}
+.max-status{font-size:12px;color:#2f6d85;min-height:18px;margin-top:7px}
+@media(max-width:900px){.float-call{right:23px;bottom:calc(100px + env(safe-area-inset-bottom,0px))}}
+@media(max-width:600px){.max-fab{right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px))}.max-card{right:16px;bottom:calc(95px + env(safe-area-inset-bottom,0px))}.float-call{right:20px;bottom:calc(94px + env(safe-area-inset-bottom,0px))}}
+@media(prefers-reduced-motion:reduce){.max-fab{transition:none}}
 </style>
 </head>
 <body>
@@ -361,11 +382,11 @@
       <a href="#how">Как вызвать</a>
     </nav>
     <button type="button" class="menu-toggle" id="menuToggle" aria-label="Открыть меню" aria-controls="headerNav" aria-expanded="false"><span></span><span></span><span></span></button>
-    <a href="tel:+78460000000" class="header-phone">
+    <a href="tel:+79053031551" class="header-phone">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92z"/>
       </svg>
-      <span>+7 (846) 000-00-00</span>
+      <span>+7 (905) 303-15-51</span>
     </a>
     <a href="#quiz" class="btn btn-primary header-cta">Вызвать мастера</a>
   </div>
@@ -486,8 +507,8 @@
             <div class="quiz-summary-row"><span>Желаемое время</span><span id="sumPreferred">—</span></div>
             <div class="quiz-summary-row"><span>Диагностика</span><span style="color:var(--green)">Бесплатно</span></div>
           </div>
-          <a href="tel:+78460000000" class="btn btn-primary btn-block" style="margin-top:8px">
-            Позвонить: +7 (846) 000-00-00
+          <a href="tel:+79053031551" class="btn btn-primary btn-block" style="margin-top:8px">
+            Позвонить: +7 (905) 303-15-51
           </a>
         </div>
       </div>
@@ -829,11 +850,11 @@
     <div class="cta-wrap reveal">
       <h2>Машинка сломалась? <em>Починим сегодня.</em></h2>
       <p>Позвоните — назову ориентировочную стоимость по телефону и приеду в удобное время. Работаю по Самаре. Точную сумму зафиксирую после диагностики.</p>
-      <a href="tel:+78460000000" class="btn btn-primary btn-lg">
+      <a href="tel:+79053031551" class="btn btn-primary btn-lg">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92z"/>
         </svg>
-        +7 (846) 000-00-00
+        +7 (905) 303-15-51
       </a>
     </div>
   </div>
@@ -854,7 +875,7 @@
       </div>
       <div class="footer-col">
         <h5>Контакты</h5>
-        <a href="tel:+78460000000">+7 (846) 000-00-00</a>
+        <a href="tel:+79053031551">+7 (905) 303-15-51</a>
         <a href="https://wa.me/78460000000">WhatsApp</a>
         <a href="https://t.me/oleg_samara">Telegram</a>
       </div>
@@ -874,11 +895,32 @@
   </div>
 </footer>
 
-<a href="tel:+78460000000" class="float-call" aria-label="Позвонить">
+<a href="tel:+79053031551" class="float-call" aria-label="Позвонить">
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92z"/>
   </svg>
 </a>
+
+
+<!-- MAX: after receiving a real profile link, set MAX_PROFILE_URL in the script below. -->
+<div class="max-widget">
+  <button class="max-fab" id="maxFab" type="button" aria-label="Написать мастеру в MAX" aria-expanded="false" aria-controls="maxCard">
+    <svg viewBox="0 0 40 36" aria-hidden="true"><path d="M6 2h28a4 4 0 0 1 4 4v19a4 4 0 0 1-4 4H18l-8 6v-6H6a4 4 0 0 1-4-4V6a4 4 0 0 1 4-4Z" fill="#fff"/><path d="m11 23 3.5-11 5.5 8 5.5-8 3.5 11" fill="none" stroke="#285df2" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span>MAX</span>
+  </button>
+  <div class="max-card" id="maxCard" role="region" aria-label="Связь с мастером в MAX" hidden>
+    <div class="max-card-head"><h2>Связаться через MAX</h2><button class="max-card-close" id="maxClose" type="button" aria-label="Закрыть">×</button></div>
+    <strong class="max-card-number">+7 (905) 303-15-51</strong>
+    <p id="maxHelp">В MAX откройте поиск «Найти по номеру» и введите номер мастера. Чтобы было удобнее, скопируйте его.</p>
+    <div class="max-card-actions">
+      <a class="max-card-action max-card-action--main" id="maxProfile" target="_blank" rel="noopener noreferrer" hidden>Написать в MAX</a>
+      <button type="button" class="max-card-action" id="maxCopy">Скопировать номер</button>
+      <a class="max-card-action max-card-action--main" id="maxWeb" href="https://web.max.ru/" target="_blank" rel="noopener noreferrer">Открыть MAX</a>
+      <a class="max-card-action" href="tel:+79053031551">Позвонить мастеру</a>
+    </div>
+    <div id="maxCopyStatus" class="max-status" role="status" aria-live="polite"></div>
+  </div>
+</div>
 
 <script>
 
@@ -926,6 +968,72 @@
   counters.forEach(c => cIo.observe(c));
 
 </script>
+
+<script>
+/**
+ * Аналитика контактов БытТех (пока БЕЗ внешних запросов и cookie).
+ * Событие: window 'byttech:contact' + dataLayer (только если уже подключён).
+ * Поля: channel, action, placement. Номер телефона и данные посетителя не передаются.
+ * Возможные action: max_widget_open, max_copy_phone, max_profile_click, max_web_open, phone_click.
+ * Место для будущего счётчика/целей Яндекс Метрики: trackContact() ниже.
+ * Подключайте внешнюю аналитику только после проверки уведомления и согласий.
+ */
+(function () {
+  'use strict';
+  const PHONE = '+79053031551';
+  // Настройка MAX: скопируйте ссылку из личного профиля мастера (MAX → Контакты → + → Пригласить по ссылке).
+  // Пример формы: https://max.ru/u/ВАШ_ИДЕНТИФИКАТОР. По номеру ссылку получить нельзя.
+  const MAX_PROFILE_URL = '';
+  function trackContact(channel, action, placement) {
+    const detail = {event:'byttech_contact', channel, action, placement};
+    window.dispatchEvent(new CustomEvent('byttech:contact',{detail}));
+    if (Array.isArray(window.dataLayer)) window.dataLayer.push(detail);
+    // TODO analytics: настройте цели Яндекс Метрики (например: max_profile_click, phone_click) после подключения счётчика.
+  }
+  const fab=document.getElementById('maxFab');
+  const card=document.getElementById('maxCard');
+  const close=document.getElementById('maxClose');
+  const copy=document.getElementById('maxCopy');
+  const status=document.getElementById('maxCopyStatus');
+  const direct=document.getElementById('maxProfile');
+  const maxWeb=document.getElementById('maxWeb');
+  const help=document.getElementById('maxHelp');
+  if (!fab||!card||!close||!copy||!direct||!maxWeb) return;
+  const validURL=/^https:\/\/max\.ru\/u\/[A-Za-z0-9_-]+\/?$/.test(MAX_PROFILE_URL);
+  direct.hidden=!validURL;
+  maxWeb.hidden=validURL;
+  help.hidden=validURL;
+  if(validURL) direct.href=MAX_PROFILE_URL;
+  function show(open,restoreFocus) {
+    card.hidden=!open;
+    fab.setAttribute('aria-expanded',String(open));
+    if(open) close.focus();
+    else if(restoreFocus) fab.focus();
+  }
+  fab.addEventListener('click',function(){const opening=card.hidden;show(opening,false);if(opening)trackContact('max','max_widget_open','floating_button');});
+  close.addEventListener('click',function(){show(false,true);});
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!card.hidden)show(false,true);});
+  document.addEventListener('click',function(e){if(!card.hidden&&!card.contains(e.target)&&!fab.contains(e.target))show(false,false);});
+  direct.addEventListener('click',function(){trackContact('max','max_profile_click','floating_widget');});
+  maxWeb.addEventListener('click',function(){trackContact('max','max_web_open','floating_widget');});
+  copy.addEventListener('click',async function(){
+    let ok=false;
+    try {
+      if(navigator.clipboard && navigator.clipboard.writeText){await navigator.clipboard.writeText(PHONE);ok=true;}
+      else {
+        const el=document.createElement('textarea');el.value=PHONE;el.style.position='fixed';el.style.opacity='0';
+        document.body.appendChild(el);el.select();ok=document.execCommand('copy');el.remove();
+      }
+    } catch(_error){ok=false;}
+    status.textContent=ok?'Номер скопирован':'Скопируйте номер вручную';
+    if(ok)trackContact('max','max_copy_phone','floating_widget');
+  });
+  document.querySelectorAll('a[href="tel:+79053031551"]').forEach(function(a){
+    a.addEventListener('click',function(){trackContact('phone','phone_click',a.classList.contains('float-call')?'floating_button':'page');});
+  });
+})();
+</script>
+
 <script src="/request-form.js" defer></script>
 </body>
 </html>

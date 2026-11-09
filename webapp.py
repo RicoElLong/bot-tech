@@ -81,9 +81,9 @@ class SiteIdentity:
             raise ValueError('Запуск сайта запрещён: заполните ' + ', '.join(missing))
         if not re.fullmatch(r'[0-9]{12}', values['inn']):
             raise ValueError('WEB_OWNER_INN должен содержать 12 цифр физического лица.')
-        if not re.fullmatch(r'\\+7[0-9]{10}', values['phone']):
+        if not re.fullmatch(r'[+]7[0-9]{10}', values['phone']):
             raise ValueError('WEB_CONTACT_PHONE должен иметь вид +7XXXXXXXXXX.')
-        if not re.fullmatch(r'[^\\s@]+@[^\\s@]+\\.[^\\s@]+', values['email']):
+        if not re.fullmatch(r'[^ @]+@[^ @]+[.][^ @]+', values['email']):
             raise ValueError('WEB_CONTACT_EMAIL имеет некорректный формат.')
         if any(len(value) > 350 or any(ord(char) < 32 for char in value) for value in values.values()):
             raise ValueError('Реквизиты содержат недопустимые символы.')
@@ -316,7 +316,7 @@ class WebsiteService:
         source = (self.web_root / filename).read_text(encoding='utf-8')
         for key, value in self.site_identity.replacements().items():
             source = source.replace('{{' + key + '}}', escape_html(value, quote=True))
-        if re.search(r'\\{\\{(?:OWNER_|CONTACT_)[A-Z0-9_]+\\}\\}', source):
+        if '{{OWNER_' in source or '{{CONTACT_' in source:
             raise web.HTTPServiceUnavailable(text='Не заполнены реквизиты сайта.')
         return web.Response(text=source, content_type='text/html', charset='utf-8')
 

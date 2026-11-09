@@ -5,6 +5,7 @@ from collections import OrderedDict, deque
 from contextlib import suppress
 from dataclasses import dataclass
 import hashlib
+from html import escape as escape_html
 import ipaddress
 import json
 import logging
@@ -56,6 +57,57 @@ class WebSettings:
         return cls(os.getenv('WEB_HOST', cls.host), port, origins, proxies)
 
 
+@dataclass(frozen=True)
+class SiteIdentity:
+    """Confirmed, operator-supplied identity. Never invent public legal data."""
+    name: str
+    inn: str
+    address: str
+    phone: str
+    email: str
+
+    @classmethod
+    def from_env(cls):
+        variables = {
+            'name': 'WEB_OWNER_FULL_NAME',
+            'inn': 'WEB_OWNER_INN',
+            'address': 'WEB_OWNER_ADDRESS',
+            'phone': 'WEB_CONTACT_PHONE',
+            'email': 'WEB_CONTACT_EMAIL',
+        }
+        values = {key: os.getenv(env_key, '').strip() for key, env_key in variables.items()}
+        missing = [variables[key] for key, value in values.items() if not value]
+        if missing:
+            raise ValueError('Запуск сайта запрещён: заполните ' + ', '.join(missing))
+        if not re.fullmatch(r'[0-9]{12}', values['inn']):
+            raise ValueError('WEB_OWNER_INN должен содержать 12 цифр физического лица.')
+        if not re.fullmatch(r'\\+7[0-9]{10}', values['phone']):
+            raise ValueError('WEB_CONTACT_PHONE должен иметь вид +7XXXXXXXXXX.')
+        if not re.fullmatch(r'[^\\s@]+@[^\\s@]+\\.[^\\s@]+', values['email']):
+            raise ValueError('WEB_CONTACT_EMAIL имеет некорректный формат.')
+        if any(len(value) > 350 or any(ord(char) < 32 for char in value) for value in values.values()):
+            raise ValueError('Реквизиты содержат недопустимые символы.')
+        checks = (
+            'WEB_SITE_PRICES_CONFIRMED',
+            'WEB_DATA_STORAGE_RU_CONFIRMED',
+            'WEB_TELEGRAM_TRANSFER_REVIEWED',
+        )
+        for key in checks:
+            if os.getenv(key, '') != '1':
+                raise ValueError(f'Сайт нельзя включать без подтверждения {key}=1.')
+        return cls(**values)
+
+    def replacements(self):
+        return {
+            'OWNER_NAME': self.name,
+            'OWNER_INN': self.inn,
+            'OWNER_ADDRESS': self.address,
+            'OWNER_PHONE': self.phone,
+            'OWNER_PHONE_E164': self.phone,
+            'OWNER_EMAIL': self.email,
+        }
+
+
 class RateLimiter:
     def __init__(self, limit=5, window=600, capacity=4096):
         self.limit, self.window, self.capacity = limit, window, capacity
@@ -96,6 +148,8 @@ def validated_submission(payload):
             raise ValueError
     except ValueError:
         raise ValueError('Некорректный номер отправки. Обновите страницу.') from None
+    if payload.get('personal_data_consent') is not True or payload.get('consent_version') != 'pd-2026-11-09-v1':
+        raise ValueError('Для обработки заявки требуется отдельное согласие.')
     if text('website', 200, required=False):
         raise ValueError('Не удалось принять форму. Обновите страницу.')
     phone = text('phone', 40)
@@ -115,6 +169,7 @@ def validated_submission(payload):
     data = {
         'preferred_date': preferred_date,
         'preferred_time': preferred_time,
+        'consent_version': 'pd-2026-11-09-v1',
         'name': text('name', 100),
         'phone': canonical_phone(phone),
         'brand': text('brand', 100),
@@ -158,12 +213,13 @@ async def deliver_notifications(db, bot, admins):
 
 
 class WebsiteService:
-    def __init__(self, db, bot, admins, settings=None, web_root=None):
+    def __init__(self, db, bot, admins, settings=None, web_root=None, site_identity=None):
         if not admins:
             raise ValueError('Для приёма заявок с сайта заполните ADMIN_IDS.')
         self.db, self.bot, self.admins = db, bot, frozenset(admins)
         self.settings = settings or WebSettings.from_env()
         self.web_root = Path(web_root) if web_root else ROOT / 'web'
+        self.site_identity = site_identity
         self.proxies = tuple(ipaddress.ip_network(item) for item in self.settings.trusted_proxies)
         self.limiter = RateLimiter()
         self.runner = None
@@ -202,6 +258,14 @@ class WebsiteService:
                 response.headers['Vary'] = 'Origin'
             response.headers['X-Content-Type-Options'] = 'nosniff'
             response.headers['Referrer-Policy'] = 'same-origin'
+            response.headers['X-Frame-Options'] = 'DENY'
+            response.headers['Permissions-Policy'] = 'camera=(), microphone=(), geolocation=()'
+            response.headers['Content-Security-Policy'] = (
+                "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; "
+                "form-action 'self'; script-src 'self' 'unsafe-inline'; "
+                "style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
+                "font-src 'self'; connect-src 'self'"
+            )
             if request.path.startswith('/api/'):
                 response.headers['Cache-Control'] = 'no-store'
             return response
@@ -212,6 +276,9 @@ class WebsiteService:
         app.router.add_get('/api/health', self.health)
         app.router.add_get('/', self.index)
         app.router.add_get('/index.html', self.index)
+        app.router.add_get('/privacy', self.privacy)
+        app.router.add_get('/consent', self.consent)
+        app.router.add_get('/legal', self.legal)
         app.router.add_get('/request-form.js', self.form_script)
         return app
 
@@ -243,8 +310,27 @@ class WebsiteService:
     async def preflight(self, request):
         return web.Response(status=204)
 
+    def site_document(self, filename):
+        if not self.site_identity:
+            raise web.HTTPServiceUnavailable(text='Реквизиты исполнителя ещё не настроены.')
+        source = (self.web_root / filename).read_text(encoding='utf-8')
+        for key, value in self.site_identity.replacements().items():
+            source = source.replace('{{' + key + '}}', escape_html(value, quote=True))
+        if re.search(r'\\{\\{(?:OWNER_|CONTACT_)[A-Z0-9_]+\\}\\}', source):
+            raise web.HTTPServiceUnavailable(text='Не заполнены реквизиты сайта.')
+        return web.Response(text=source, content_type='text/html', charset='utf-8')
+
     async def index(self, request):
-        return web.FileResponse(self.web_root / 'index.html')
+        return self.site_document('index.html')
+
+    async def privacy(self, request):
+        return self.site_document('privacy.html')
+
+    async def consent(self, request):
+        return self.site_document('consent.html')
+
+    async def legal(self, request):
+        return self.site_document('legal.html')
 
     async def form_script(self, request):
         return web.FileResponse(self.web_root / 'request-form.js')
@@ -281,7 +367,9 @@ async def start_website(application):
     if enabled not in ('0', 'false', 'no', '', '1', 'true', 'yes'):
         raise ValueError('WEB_ENABLED должен быть 0 или 1.')
     if enabled in ('1', 'true', 'yes'):
-        service = WebsiteService(application.bot_data['store'], application.bot, application.bot_data['admins'])
+        identity = SiteIdentity.from_env()  # fail closed if business, data or advertising terms unverified
+        service = WebsiteService(application.bot_data['store'], application.bot,
+                                 application.bot_data['admins'], site_identity=identity)
         await service.start()
         application.bot_data['website_service'] = service
 

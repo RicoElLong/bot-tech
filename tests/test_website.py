@@ -16,7 +16,7 @@ from telegram.error import NetworkError, RetryAfter
 
 import bot
 from storage import Store
-from webapp import (WebSettings, WebsiteService, deliver_notifications,
+from webapp import (WebSettings, WebsiteService, SiteIdentity, deliver_notifications,
                     start_website, stop_website, validated_submission)
 
 
@@ -27,7 +27,11 @@ class WebsiteTests(unittest.IsolatedAsyncioTestCase):
         self.db = Store(self.path)
         self.bot = SimpleNamespace(send_message=AsyncMock())
         self.settings = WebSettings(origins=('https://byttech.example',), trusted_proxies=())
-        self.service = WebsiteService(self.db, self.bot, {99, 100}, self.settings)
+        self.identity = SiteIdentity(name='Тестовый Мастер', inn='123456789012',
+                                     address='Адрес для тестов', phone='+79990001122',
+                                     email='testing@example.test')
+        self.service = WebsiteService(self.db, self.bot, {99, 100}, self.settings,
+                                      site_identity=self.identity)
         self.client = TestClient(TestServer(self.service.make_app()))
         await self.client.start_server()
 
@@ -39,7 +43,8 @@ class WebsiteTests(unittest.IsolatedAsyncioTestCase):
     def payload(self, **changes):
         data = {'submission_id': str(uuid4()), 'name': 'Анна', 'phone': '8 (999) 123-45-67',
                 'brand': 'Bosch', 'problem': 'Не сливает воду', 'comment': 'Вечером после 18:00', 'website': '',
-                'preferred_date': (local_now().date()+timedelta(days=2)).isoformat(), 'preferred_time': '10:00'}
+                'preferred_date': (local_now().date()+timedelta(days=2)).isoformat(), 'preferred_time': '10:00',
+                'personal_data_consent': True, 'consent_version': 'pd-2026-11-09-v1'}
         data.update(changes)
         return data
 
@@ -58,6 +63,8 @@ class WebsiteTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(row['source'], 'website')
         self.assertEqual(row['preferred_date'], self.payload()['preferred_date'])
         self.assertEqual(row['preferred_time'], '10:00')
+        self.assertEqual(row['consent_version'], 'pd-2026-11-09-v1')
+        self.assertIsNotNone(row['consent_recorded_at'])
         self.assertEqual(self.db.counts(), (0, 0, 1))
         query = SimpleNamespace(from_user=SimpleNamespace(id=99), data='admin:requests:0',
                                 answer=AsyncMock(), edit_message_text=AsyncMock())
@@ -193,6 +200,10 @@ class WebsiteTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_invalid_fields_and_honeypot_never_create_request(self):
         for data in (self.payload(phone='123'), self.payload(name=''), self.payload(website='spam'),
+                     self.payload(personal_data_consent=False),
+                     self.payload(personal_data_consent='true'),
+                     self.payload(consent_version='unknown'),
+                     self.payload(consent_version=''),
                      self.payload(submission_id='bad'), self.payload(name='Анна\nАдмин'),
                      self.payload(comment='x' * 2001), [], self.payload(phone=True)):
             with self.subTest(data=type(data).__name__):
@@ -283,6 +294,20 @@ class WebsiteTests(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn('BOT_TOKEN', html)
         self.assertNotIn('api.telegram.org', html)
         self.assertIn('/request-form.js', html)
+        self.assertIn('/consent', html)
+        self.assertIn('/privacy', html)
+        self.assertIn('Тестовый Мастер', html)
+        self.assertNotIn('{{OWNER_NAME}}', html)
+        self.assertNotIn('https://fonts.googleapis.com', html)
+        self.assertNotIn('t.me/oleg_samara', html)
+        for path in ('/privacy', '/consent', '/legal'):
+            page = await self.client.get(path)
+            self.assertEqual(page.status, 200)
+            self.assertEqual(page.headers.get('X-Frame-Options'), 'DENY')
+            body = await page.text()
+            self.assertIn('Тестовый Мастер', body)
+            self.assertIn('testing@example.test', body)
+            self.assertNotIn('{{OWNER_NAME}}', body)
         for path in ('/.env', '/bot.py', '/data/bot.sqlite3'):
             self.assertEqual((await self.client.get(path)).status, 404)
 
@@ -299,6 +324,36 @@ class WebsiteTests(unittest.IsolatedAsyncioTestCase):
             await start_website(application)
         await stop_website(application)
         self.assertEqual(application.bot_data, {})
+
+    def test_public_identity_is_required_for_launch(self):
+        with patch.dict(os.environ, {}, clear=True), self.assertRaises(ValueError):
+            SiteIdentity.from_env()
+        fake = {
+            'WEB_OWNER_FULL_NAME': 'Иван Иванов',
+            'WEB_OWNER_INN': '123456789012',
+            'WEB_OWNER_ADDRESS': 'Тестовый почтовый адрес',
+            'WEB_CONTACT_PHONE': '+79990001122',
+            'WEB_CONTACT_EMAIL': 'test@example.test',
+            'WEB_SITE_PRICES_CONFIRMED': '1',
+            'WEB_DATA_STORAGE_RU_CONFIRMED': '1',
+            'WEB_TELEGRAM_TRANSFER_REVIEWED': '1',
+        }
+        with patch.dict(os.environ, fake, clear=True):
+            self.assertEqual(SiteIdentity.from_env().name, 'Иван Иванов')
+        for name in ('WEB_SITE_PRICES_CONFIRMED', 'WEB_DATA_STORAGE_RU_CONFIRMED',
+                     'WEB_TELEGRAM_TRANSFER_REVIEWED'):
+            bad = {**fake, name: '0'}
+            with patch.dict(os.environ, bad, clear=True), self.assertRaises(ValueError):
+                SiteIdentity.from_env()
+        with patch.dict(os.environ, {**fake, 'WEB_CONTACT_PHONE': '123'},
+                        clear=True), self.assertRaises(ValueError):
+            SiteIdentity.from_env()
+
+    async def test_unconfigured_public_site_is_unavailable(self):
+        service = WebsiteService(self.db, self.bot, {99}, self.settings)
+        for page in ('index.html', 'privacy.html', 'consent.html', 'legal.html'):
+            with self.assertRaises(Exception):
+                service.site_document(page)
 
     def test_intake_requires_admin_and_valid_configuration(self):
         with self.assertRaises(ValueError):

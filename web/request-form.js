@@ -13,6 +13,7 @@
   const controls = quiz.querySelectorAll('.quiz-form input, .quiz-form textarea, .quiz-form select, .quiz-opt');
   const preferredDate = field('preferredDate');
   const preferredTime = field('preferredTime');
+  const consent = field('personalDataConsent');
 
   function samaraToday() {
     const parts = new Intl.DateTimeFormat('en-CA', {timeZone: 'Europe/Samara', year: 'numeric',
@@ -64,7 +65,7 @@
       : Boolean(field('quizName').value.trim()) && validPhone(field('quizPhone').value.trim())
         && Boolean(preferredDate.value) && Boolean(preferredTime.value)
         && preferredDate.value >= preferredDate.min && preferredDate.value <= preferredDate.max
-        && !preferredTime.selectedOptions[0]?.disabled;
+        && !preferredTime.selectedOptions[0]?.disabled && consent.checked;
     btnNext.disabled = sending || !ready;
     btnNext.textContent = sending ? 'Отправляем…' : step === 3 ? 'Отправить заявку' : 'Далее →';
   }
@@ -115,12 +116,13 @@
     refreshPreferred();
     if (!field('quizName').reportValidity() || !field('quizPhone').reportValidity()
         || !validPhone(field('quizPhone').value.trim()) || !preferredDate.reportValidity()
-        || !preferredTime.reportValidity() || preferredTime.selectedOptions[0]?.disabled) {
-      showError('Выберите доступные дату и время визита.'); return;
+        || !preferredTime.reportValidity() || preferredTime.selectedOptions[0]?.disabled || !consent.reportValidity()) {
+      showError('Проверьте дату, время и отдельное согласие на обработку данных.'); return;
     }
     const data = {...answers, name: field('quizName').value.trim(), phone: field('quizPhone').value.trim(),
       comment: field('quizComment').value.trim(), website: field('website').value,
-      preferred_date: preferredDate.value, preferred_time: preferredTime.value};
+      preferred_date: preferredDate.value, preferred_time: preferredTime.value,
+      personal_data_consent: consent.checked, consent_version: 'pd-2026-11-09-v1'};
     const snapshot = JSON.stringify(data);
     if (!pending || pending.snapshot !== snapshot) pending = {snapshot, id: uuid()};
     sending = true;

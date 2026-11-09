@@ -4,11 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Быттех — ремонт стиральных машин в Самаре на дому | Самозанятый Олег</title>
-<meta name="description" content="Ремонт стиральных машин на дому в Самаре. Цену говорим сразу, диагностика бесплатно, гарантия от 3 мес. до года + талон на руки. Скидка 10% пенсионерам и участникам СВО." />
+<meta name="description" content="Ремонт стиральных машин на дому в Самаре. Услуги, ориентировочные цены и запись к мастеру. Стоимость, сроки и гарантия согласовываются до ремонта." />
 <meta name="theme-color" content="#ffffff" />
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=PT+Serif:ital@0;1&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#ffffff;--bg-alt:#f7f9fc;--bg-dark:#0b1a33;
@@ -20,7 +17,7 @@
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
-  body{font-family:'Manrope',-apple-system,BlinkMacSystemFont,sans-serif;
+  body{font-family:system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
     background:var(--bg);color:var(--text);line-height:1.65;
     -webkit-font-smoothing:antialiased;overflow-x:hidden;font-size:16px}
   a{color:inherit;text-decoration:none}
@@ -34,7 +31,7 @@
   .header-inner{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:12px 0}
   .logo{display:flex;align-items:center;gap:6px;flex-shrink:0;transition:opacity .25s;line-height:1}
   .logo:hover{opacity:.85}
-  .logo-word{font-family:'Manrope',sans-serif;font-weight:800;letter-spacing:-.5px;line-height:1;color:var(--text);display:inline-flex;align-items:center}
+  .logo-word{font-family:system-ui,sans-serif;font-weight:800;letter-spacing:-.5px;line-height:1;color:var(--text);display:inline-flex;align-items:center}
   .logo-word--byt{font-size:24px}
   .logo-word--teh{font-size:30px;color:var(--blue);letter-spacing:-1px}
   .logo-icon{width:32px;height:32px;flex-shrink:0;display:block;margin:0 2px;align-self:center}
@@ -59,7 +56,7 @@
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
     padding:13px 26px;border-radius:8px;font-weight:600;font-size:15px;
     border:none;cursor:pointer;transition:all .25s;white-space:nowrap;
-    font-family:'Manrope',sans-serif;text-align:center}
+    font-family:system-ui,sans-serif;text-align:center}
   .btn-primary{background:var(--blue);color:#fff}
   .btn-primary:hover{background:var(--blue-dark);box-shadow:0 4px 14px rgba(26,86,219,.35)}
   .btn-outline{background:transparent;color:var(--blue);border:1.5px solid var(--blue)}
@@ -147,7 +144,7 @@
   .section-head.center{text-align:center;margin-left:auto;margin-right:auto}
   .section-label{display:inline-block;font-size:13px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px}
   .section-head h2{font-size:clamp(26px,3.2vw,38px);font-weight:800;letter-spacing:-.8px;line-height:1.15;margin-bottom:14px}
-  .section-head h2 em{font-family:'PT Serif',serif;font-style:italic;font-weight:400;color:var(--blue)}
+  .section-head h2 em{font-family:Georgia,serif;font-style:italic;font-weight:400;color:var(--blue)}
   .section-head p{color:var(--text-2);font-size:16px;line-height:1.7}
 
   /* REVEAL */
@@ -220,7 +217,7 @@
   .cta-wrap{background:var(--bg-dark);border-radius:var(--radius-lg);padding:64px 48px;text-align:center;color:#fff;position:relative;overflow:hidden}
   .cta-wrap::before{content:'';position:absolute;top:-50%;right:-20%;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(26,86,219,.3),transparent 70%);pointer-events:none}
   .cta-wrap h2{font-size:clamp(26px,3.2vw,38px);font-weight:800;letter-spacing:-.8px;line-height:1.15;margin-bottom:16px;position:relative}
-  .cta-wrap h2 em{font-family:'PT Serif',serif;font-style:italic;font-weight:400;color:#93c5fd}
+  .cta-wrap h2 em{font-family:Georgia,serif;font-style:italic;font-weight:400;color:#93c5fd}
   .cta-wrap p{color:#94a3b8;max-width:500px;margin:0 auto 32px;font-size:16px;line-height:1.7;position:relative}
   .cta-wrap .btn{position:relative}
   .cta-wrap .btn-primary{background:#fff;color:var(--blue-dark)}
@@ -367,6 +364,12 @@
 @media(max-width:900px){.float-call{right:23px;bottom:calc(100px + env(safe-area-inset-bottom,0px))}}
 @media(max-width:600px){.max-fab{right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px))}.max-card{right:16px;bottom:calc(95px + env(safe-area-inset-bottom,0px))}.float-call{right:20px;bottom:calc(94px + env(safe-area-inset-bottom,0px))}}
 @media(prefers-reduced-motion:reduce){.max-fab{transition:none}}
+  .privacy-consent{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;background:#f0f9ff;border-radius:10px;border:1px solid #c6e7f8;margin:8px 0 0}
+  .privacy-consent input{width:20px;height:20px;min-width:20px;accent-color:#087daf;margin-top:3px;cursor:pointer}
+  .privacy-consent label{font-size:13px;line-height:1.55;color:#213b56}
+  .privacy-consent a,.privacy-note a{color:#006895;text-decoration:underline;text-underline-offset:2px}
+  .privacy-note{font-size:12px;color:#4c6071;line-height:1.55}
+  .privacy-consent:focus-within{outline:2px solid #389bd3;outline-offset:2px}
 </style>
 </head>
 <body>
@@ -382,11 +385,11 @@
       <a href="#how">Как вызвать</a>
     </nav>
     <button type="button" class="menu-toggle" id="menuToggle" aria-label="Открыть меню" aria-controls="headerNav" aria-expanded="false"><span></span><span></span><span></span></button>
-    <a href="tel:+79053031551" class="header-phone">
+    <a href="tel:{{OWNER_PHONE_E164}}" class="header-phone">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92z"/>
       </svg>
-      <span>+7 (905) 303-15-51</span>
+      <span>{{OWNER_PHONE}}</span>
     </a>
     <a href="#quiz" class="btn btn-primary header-cta">Вызвать мастера</a>
   </div>
@@ -398,7 +401,7 @@
     <div class="hero-copy">
       <span class="hero-badge">Ремонт стиральных машин · Самара</span>
       <h1 id="heroTitle">Ремонт <br>стиральных машин <span>на дому</span></h1>
-      <p class="hero-lead"><b>Олег — частный мастер с опытом 12 лет.</b> Ремонтирую стиральные машины в Самаре. В 90% случаев называю стоимость по телефону. Гарантия на работы — от 3 до 12 месяцев с талоном.</p>
+      <p class="hero-lead"><b>Олег — частный мастер.</b> Ремонтирую стиральные машины в Самаре. Помогу оценить стоимость по телефону — окончательная цена после диагностики. Гарантийные условия фиксируются в документах по ремонту.</p>
       <div class="hero-cta">
         <a href="#quiz" class="btn btn-primary btn-lg">Вызвать мастера</a>
         <a href="#prices" class="btn btn-outline btn-lg">Узнать цену</a>
@@ -409,9 +412,9 @@
     </div>
   </div>
   <div class="container hero-proof" aria-label="Преимущества сервиса">
-    <div class="hero-proof-card"><span class="hero-proof-icon" aria-hidden="true">✓</span><div><strong>12 лет опыта</strong><small>Ремонт стиральных машин в Самаре</small></div></div>
-    <div class="hero-proof-card"><span class="hero-proof-icon" aria-hidden="true">◇</span><div><strong>Гарантия 3–12 месяцев</strong><small>Гарантийный талон на руки</small></div></div>
-    <div class="hero-proof-card"><span class="hero-proof-icon" aria-hidden="true">₽</span><div><strong>Честная стоимость</strong><small>Оценка по телефону в 90% случаев</small></div></div>
+    <div class="hero-proof-card"><span class="hero-proof-icon" aria-hidden="true">✓</span><div><strong>Практический опыт</strong><small>Ремонт стиральных машин в Самаре</small></div></div>
+    <div class="hero-proof-card"><span class="hero-proof-icon" aria-hidden="true">◇</span><div><strong>Гарантия на работу</strong><small>Гарантийный талон на руки</small></div></div>
+    <div class="hero-proof-card"><span class="hero-proof-icon" aria-hidden="true">₽</span><div><strong>Честная стоимость</strong><small>Предварительная оценка по телефону</small></div></div>
   </div>
 </section>
 
@@ -466,7 +469,7 @@
 
       <div class="quiz-step" data-step="3">
         <h3>Куда отправить расчёт?</h3>
-        <p>Перезвоню в течение 15 минут и назову цену</p>
+        <p>Мастер свяжется с вами, чтобы уточнить стоимость и согласовать время визита</p>
         <div class="quiz-form">
           <input type="text" name="quizName" placeholder="Ваше имя" autocomplete="name" maxlength="100" required />
           <input type="tel" name="quizPhone" placeholder="Телефон" autocomplete="tel" inputmode="tel" maxlength="40" required />
@@ -486,6 +489,11 @@
             <p class="quiz-field-note">Это пожелание по времени: мастер подтвердит визит после звонка.</p>
           </div>
           <textarea name="quizComment" placeholder="Комментарий (необязательно)" maxlength="2000" rows="2"></textarea>
+          <div class="privacy-consent">
+            <input type="checkbox" id="personalDataConsent" name="personalDataConsent" required />
+            <label for="personalDataConsent">Даю отдельное <a href="/consent" target="_blank" rel="noopener noreferrer">согласие на обработку персональных данных</a> для ответа на заявку и согласования ремонта. Без рекламных рассылок.</label>
+          </div>
+          <p class="privacy-note">Оператор и порядок обработки указаны в <a href="/privacy" target="_blank" rel="noopener noreferrer">политике персональных данных</a>. Условия ремонта — <a href="/legal" target="_blank" rel="noopener noreferrer">в информации об исполнителе</a>.</p>
           <input type="text" name="website" style="position:absolute;left:-9999px" tabindex="-1" autocomplete="off" aria-hidden="true">
           <p id="quizError" role="alert" style="color:#b42318;font-size:14px" hidden></p>
         </div>
@@ -499,7 +507,7 @@
             </svg>
           </div>
           <h3>Заявка отправлена!</h3>
-          <p style="color:var(--muted);margin-bottom:20px;font-size:14px">Мастер Олег перезвонит в течение 15 минут.</p>
+          <p style="color:var(--muted);margin-bottom:20px;font-size:14px">Мастер свяжется с вами для подтверждения заявки.</p>
           <div class="quiz-summary">
             <div class="quiz-summary-row"><span>Номер заявки</span><span id="sumRequest">—</span></div>
             <div class="quiz-summary-row"><span>Марка</span><span id="sumBrand">—</span></div>
@@ -507,8 +515,8 @@
             <div class="quiz-summary-row"><span>Желаемое время</span><span id="sumPreferred">—</span></div>
             <div class="quiz-summary-row"><span>Диагностика</span><span style="color:var(--green)">Бесплатно</span></div>
           </div>
-          <a href="tel:+79053031551" class="btn btn-primary btn-block" style="margin-top:8px">
-            Позвонить: +7 (905) 303-15-51
+          <a href="tel:{{OWNER_PHONE_E164}}" class="btn btn-primary btn-block" style="margin-top:8px">
+            Позвонить: {{OWNER_PHONE}}
           </a>
         </div>
       </div>
@@ -537,7 +545,7 @@
           </svg>
         </div>
         <h3>Цену говорю сразу</h3>
-        <p>В 90% случаев называю стоимость ремонта уже по телефону. Не люблю «приеду — посмотрю — назову».</p>
+        <p>Назову предварительную стоимость по телефону, если информации о поломке будет достаточно. Не люблю «приеду — посмотрю — назову».</p>
       </div>
       <div class="feature">
         <div class="feature-icon">
@@ -776,12 +784,12 @@
       <div class="step">
         <div class="step-num">02</div>
         <h3>Согласуем время</h3>
-        <p>Свяжусь в течение 30 минут. Подберём удобное время для выезда, обычно — в день обращения.</p>
+        <p>Свяжусь для уточнения деталей. Подберём удобное время для выезда, обычно — в день обращения.</p>
       </div>
       <div class="step">
         <div class="step-num">03</div>
         <h3>Ремонт на месте</h3>
-        <p>Проведу бесплатную диагностику, назову стоимость и после согласия починю. Проверю на всех режимах.</p>
+        <p>Проведу диагностику, назову стоимость и после согласия починю. Проверю на всех режимах.</p>
       </div>
     </div>
   </div>
@@ -797,7 +805,7 @@
     <div class="warnings reveal">
       <div class="warning">
         <span class="warning-icon">📞</span>
-        <p><strong>В 90% случаев называю цену сразу по телефону.</strong> Опишите поломку и модель — скажу ориентировочную стоимость ещё до выезда. Оставшиеся 10% — сложные случаи, где нужно смотреть на месте.</p>
+        <p><strong>Если проблема понятна по описанию, постараюсь назвать предварительную стоимость по телефону.</strong> Опишите поломку и модель — скажу ориентировочную стоимость ещё до выезда. В сложных случаях требуется осмотр на месте.</p>
       </div>
       <div class="warning">
         <span class="warning-icon">🛡️</span>
@@ -848,13 +856,13 @@
 <section class="section section-alt" id="order">
   <div class="container">
     <div class="cta-wrap reveal">
-      <h2>Машинка сломалась? <em>Починим сегодня.</em></h2>
+      <h2>Машинка сломалась? <em>Согласуем ремонт.</em></h2>
       <p>Позвоните — назову ориентировочную стоимость по телефону и приеду в удобное время. Работаю по Самаре. Точную сумму зафиксирую после диагностики.</p>
-      <a href="tel:+79053031551" class="btn btn-primary btn-lg">
+      <a href="tel:{{OWNER_PHONE_E164}}" class="btn btn-primary btn-lg">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92z"/>
         </svg>
-        +7 (905) 303-15-51
+        {{OWNER_PHONE}}
       </a>
     </div>
   </div>
@@ -866,18 +874,19 @@
     <div class="footer-grid">
       <div class="footer-brand">
         <a href="#top" class="logo" aria-label="БытТех — на главную"><img class="logo-image" src="data:image/avif;base64,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" width="350" height="93" alt="БытТех" decoding="async"></a>
-        <p>Самозанятый Олег — ремонт стиральных машин на дому в Самаре. 12 лет опыта, оригинальные запчасти, гарантия от 3 месяцев до года. На каждую работу выдаю бумажный гарантийный талон, чек — электронный через «Мой налог».</p>
+        <p>Самозанятый Олег — ремонт стиральных машин на дому в Самаре. Практический опыт, подходящие запчасти по согласованию, гарантия по условиям заказа. Гарантийные условия указываются в документах по ремонту, чек — электронный через «Мой налог».</p>
         <p class="footer-legal">
-          Самозанятый · Плательщик налога на профессиональный доход (НПД).<br>
+          Исполнитель: <strong>{{OWNER_NAME}}</strong>, плательщик НПД, ИНН {{OWNER_INN}}.<br>
+          Адрес для обращений: {{OWNER_ADDRESS}}.<br>
           Работаю по Самаре.<br>
-          Чек формирую в приложении «Мой налог». Цены на сайте носят информационный характер и не являются публичной офертой.
+          Чек формирую в приложении «Мой налог». Условия заказа и гарантия согласовываются отдельно. Цены ориентировочные.
         </p>
       </div>
       <div class="footer-col">
         <h5>Контакты</h5>
-        <a href="tel:+79053031551">+7 (905) 303-15-51</a>
-        <a href="https://wa.me/78460000000">WhatsApp</a>
-        <a href="https://t.me/oleg_samara">Telegram</a>
+        <a href="tel:{{OWNER_PHONE_E164}}">{{OWNER_PHONE}}</a>
+        <a href="mailto:{{OWNER_EMAIL}}">{{OWNER_EMAIL}}</a>
+        <a href="/#quiz">Оставить заявку на сайте</a>
       </div>
       <div class="footer-col">
         <h5>Разделы</h5>
@@ -886,6 +895,9 @@
         <a href="#discounts">Скидки</a>
         <a href="#how">Как вызвать</a>
         <a href="#districts">Районы</a>
+        <a href="/legal">Об исполнителе и условиях ремонта</a>
+        <a href="/privacy">Политика обработки персональных данных</a>
+        <a href="/consent">Согласие на обработку данных</a>
       </div>
     </div>
     <div class="footer-bottom">
@@ -895,7 +907,7 @@
   </div>
 </footer>
 
-<a href="tel:+79053031551" class="float-call" aria-label="Позвонить">
+<a href="tel:{{OWNER_PHONE_E164}}" class="float-call" aria-label="Позвонить">
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.37 1.9.72 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.35 1.85.59 2.81.72A2 2 0 0 1 22 16.92z"/>
   </svg>
@@ -910,13 +922,13 @@
   </button>
   <div class="max-card" id="maxCard" role="region" aria-label="Связь с мастером в MAX" hidden>
     <div class="max-card-head"><h2>Связаться через MAX</h2><button class="max-card-close" id="maxClose" type="button" aria-label="Закрыть">×</button></div>
-    <strong class="max-card-number">+7 (905) 303-15-51</strong>
+    <strong class="max-card-number">{{OWNER_PHONE}}</strong>
     <p id="maxHelp">В MAX откройте поиск «Найти по номеру» и введите номер мастера. Чтобы было удобнее, скопируйте его.</p>
     <div class="max-card-actions">
       <a class="max-card-action max-card-action--main" id="maxProfile" target="_blank" rel="noopener noreferrer" hidden>Написать в MAX</a>
       <button type="button" class="max-card-action" id="maxCopy">Скопировать номер</button>
       <a class="max-card-action max-card-action--main" id="maxWeb" href="https://web.max.ru/" target="_blank" rel="noopener noreferrer">Открыть MAX</a>
-      <a class="max-card-action" href="tel:+79053031551">Позвонить мастеру</a>
+      <a class="max-card-action" href="tel:{{OWNER_PHONE_E164}}">Позвонить мастеру</a>
     </div>
     <div id="maxCopyStatus" class="max-status" role="status" aria-live="polite"></div>
   </div>
@@ -1028,7 +1040,7 @@
     status.textContent=ok?'Номер скопирован':'Скопируйте номер вручную';
     if(ok)trackContact('max','max_copy_phone','floating_widget');
   });
-  document.querySelectorAll('a[href="tel:+79053031551"]').forEach(function(a){
+  document.querySelectorAll('a[href="tel:{{OWNER_PHONE_E164}}"]').forEach(function(a){
     a.addEventListener('click',function(){trackContact('phone','phone_click',a.classList.contains('float-call')?'floating_button':'page');});
   });
 })();

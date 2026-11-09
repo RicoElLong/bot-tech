@@ -279,6 +279,7 @@ class WebsiteService:
         app.router.add_get('/privacy', self.privacy)
         app.router.add_get('/consent', self.consent)
         app.router.add_get('/legal', self.legal)
+        app.router.add_get('/work-order', self.work_order)
         app.router.add_get('/request-form.js', self.form_script)
         return app
 
@@ -331,6 +332,9 @@ class WebsiteService:
 
     async def legal(self, request):
         return self.site_document('legal.html')
+
+    async def work_order(self, request):
+        return self.site_document('work-order.html')
 
     async def form_script(self, request):
         return web.FileResponse(self.web_root / 'request-form.js')

@@ -24,7 +24,7 @@ class ServicePricesTests(unittest.TestCase):
             ("Не набирает воду", 1300),
         )
         for row, (name, value) in zip(rows, expected):
-            row = re.sub(r"\\s+", " ", row).replace("\\u00a0", " ")
+            row = " ".join(row.split())
             self.assertIn(f"<h3>{name}</h3>", row)
             self.assertIn(f"от {value:,}".replace(",", " ") + " ₽", row)
 

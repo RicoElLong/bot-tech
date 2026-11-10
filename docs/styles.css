@@ -82,14 +82,15 @@ h1 small { display: block; font: inherit; font-size: .7em; letter-spacing: -.035
 .section-heading > p { max-width: 330px; font-size: 14px; color: var(--muted); margin-bottom: 3px; }
 .eyebrow { display: flex; align-items: center; gap: 7px; text-transform: uppercase; letter-spacing: .12em; font-size: 11px; font-weight: 750; color: var(--blue-dark); margin-bottom: 16px; }
 .eyebrow .icon { width: 17px; height: 17px; }
-.service-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; }
-.service-card { padding: 26px 23px; border: 1px solid var(--line); border-radius: 18px; background: #ffffffeb; display: flex; flex-direction: column; }
-.icon-circle { display: grid; place-items: center; color: var(--blue); width: 52px; height: 52px; border-radius: 50%; background: #e2f3ff; margin-bottom: 22px; }
-.icon-circle .icon { width: 28px; height: 28px; }
-.service-card h3 { font-size: 18px; margin-bottom: 12px; }
-.service-card p { font-size: 13px; color: var(--muted); margin-bottom: 22px; }
-.service-card a { display: flex; align-items: center; gap: 10px; color: var(--blue-dark); font-size: 12px; font-weight: 650; margin-top: auto; min-height: 34px; }
-.service-card a .icon { width: 16px; height: 16px; }
+.service-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 16px; }
+.service-card { padding: 24px 20px 20px; border: 1px solid var(--line); border-radius: 18px; background: #fff; display: flex; flex-direction: column; }
+.service-card-help { background: #eff8ff; border-color: #badbf2; }
+.icon-circle { display: grid; place-items: center; width: 54px; height: 54px; color: var(--blue-dark); background: #e8f5ff; border-radius: 15px; margin-bottom: 16px; }
+.service-card h3 { font-size: 18px; margin-bottom: 8px; }
+.service-card p { font-size: 13px; color: var(--muted); margin-bottom: 16px; }
+.service-link { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: auto; min-height: 44px; padding: 8px 12px; border: 1px solid #b7d9ef; border-radius: 9px; color: var(--blue-dark); background: #f4faff; font-size: 13px; font-weight: 700; line-height: 1.25; }
+.service-link span { flex-shrink: 0; font-size: 16px; }
+.service-link:hover { background: #e6f4ff; border-color: #83bbdf; }
 .section-note { color: var(--muted); font-size: 12px; line-height: 1.7; margin: 24px 0 0; }
 .section-soft { background: #e9f3fc9c; border-block: 1px solid #e1ecf5; }
 .prices-grid, .areas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 70px; align-items: center; }
@@ -207,12 +208,11 @@ details > p { margin: 0 40px 24px 0; max-width: 850px; color: var(--muted); font
   .section-heading > p { max-width: 100%; margin-top: 19px; font-size: 13px; }
   .service-grid { gap: 11px; }
   .service-card { padding: 20px 15px; border-radius: 14px; }
-  .icon-circle { width: 42px; height: 42px; margin-bottom: 19px; }
-  .icon-circle .icon { width: 24px; height: 24px; }
+  .icon-circle { width: 44px; height: 44px; margin-bottom: 12px; }
+  .icon-circle svg { width: 25px; height: 25px; }
   .service-card h3 { font-size: 16px; }
   .service-card p { font-size: 12px; line-height: 1.65; }
-  .service-card a { font-size: 11px; gap: 5px; line-height: 1.4; }
-  .service-card a .icon { width: 14px; height: 14px; }
+  .service-link { font-size: 12px; padding-inline: 8px; }
   .section-note { font-size: 11px; }
   .prices-grid, .areas-grid { grid-template-columns: 1fr; gap: 27px; }
   .section-description { font-size: 14px; }

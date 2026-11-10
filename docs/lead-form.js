@@ -47,12 +47,17 @@
       button.type = 'button'; button.className = 'lead-option'; button.textContent = value;
       button.setAttribute('aria-pressed', 'false');
       button.addEventListener('click', () => {
-        state[field] = value;
-        group.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b === button)));
-        state.step += 1;
+        selectOption(field, value);
+        state.step = field === 'brand' && opener?.dataset.serviceProblem && state.problem ? 3 : state.step + 1;
         showError(''); update();
       });
       group.append(button);
+    });
+  }
+  function selectOption(field, value) {
+    state[field] = value;
+    dialog.querySelectorAll(`[data-options="${field}"] button`).forEach(button => {
+      button.setAttribute('aria-pressed', String(button.textContent === value));
     });
   }
   options('brand', BRANDS); options('problem', PROBLEMS);
@@ -64,6 +69,11 @@
   function open(event) {
     event.preventDefault(); opener = event.currentTarget;
     if (state.sent) reset();
+    const problem = opener.dataset.serviceProblem;
+    if (PROBLEMS.includes(problem)) {
+      selectOption('problem', problem);
+      state.step = state.brand ? 3 : 1;
+    }
     if (!dialog.open) dialog.showModal();
     document.body.classList.add('lead-open');
     showError(''); update();

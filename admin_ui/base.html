@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title %}Админ-панель{% endblock %} · БытТех</title>
+  <link rel="stylesheet" href="/admin/style.css">
+  <script src="/admin/forms.js" defer></script>
+</head>
+<body>
+  {% if admin %}
+  <a class="skip" href="#main">К содержанию</a>
+  <header class="top"><div class="wrap top-inner">
+    <a class="brand" href="/admin"><span>Быт</span>Тех <small>Панель владельца</small></a>
+    <nav aria-label="Разделы панели">
+      <a href="/admin"{% if path == '/admin' %} aria-current="page"{% endif %}>Обзор</a>
+      <a href="/admin/requests"{% if path.startswith('/admin/requests') %} aria-current="page"{% endif %}>Заявки</a>
+      <a href="/admin/agenda"{% if path == '/admin/agenda' %} aria-current="page"{% endif %}>Расписание</a>
+      <a href="/admin/site"{% if path.startswith('/admin/site') %} aria-current="page"{% endif %}>Сайт</a>
+    </nav>
+    <form method="post" action="/admin/logout">
+      <input type="hidden" name="csrf" value="{{ admin.csrf }}">
+      <button class="quiet" type="submit">Выйти</button>
+    </form>
+  </div></header>
+  {% endif %}
+  <main id="main" class="{% if admin %}wrap workspace{% else %}login-layout{% endif %}">
+    {% block body %}{% endblock %}
+  </main>
+</body>
+</html>

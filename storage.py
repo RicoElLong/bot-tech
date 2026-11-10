@@ -58,33 +58,33 @@ class Store:
         self._migrate_sources()
 
     def _migrate_sources(self):
-        # Rebuild once: a website visitor does not have a Telegram user_id.
+        # Rebuild once to support website and phone requests without a Telegram ID.
         columns = {row['name'] for row in self.db.execute('PRAGMA table_info(requests)')}
         with self.db:
             self.db.execute('BEGIN IMMEDIATE')
-            if 'source' not in columns:
+            schema = self.db.execute("SELECT sql FROM sqlite_master WHERE name='requests'").fetchone()['sql']
+            if "'phone'" not in schema:
+                supported = (
+                    'id', 'user_id', 'phone', 'problem', 'created', 'booking', 'source',
+                    'contact_name', 'brand', 'comment', 'preferred_date', 'preferred_time',
+                    'consent_version', 'consent_recorded_at',
+                )
+                if columns.difference(supported):
+                    raise RuntimeError('Структура заявок отличается от поддерживаемой. Миграция остановлена.')
                 self.db.execute('''CREATE TABLE requests_with_sources (
                     id INTEGER PRIMARY KEY, user_id INTEGER, phone TEXT NOT NULL,
                     problem TEXT NOT NULL, created TEXT NOT NULL, booking TEXT,
-                    source TEXT NOT NULL DEFAULT 'telegram' CHECK(source IN ('telegram','website')),
+                    source TEXT NOT NULL DEFAULT 'telegram' CHECK(source IN ('telegram','website','phone')),
                     contact_name TEXT NOT NULL DEFAULT '', brand TEXT NOT NULL DEFAULT '',
-                    comment TEXT NOT NULL DEFAULT '',
+                    comment TEXT NOT NULL DEFAULT '', preferred_date TEXT, preferred_time TEXT,
+                    consent_version TEXT, consent_recorded_at TEXT,
                     CHECK((source='telegram' AND user_id IS NOT NULL)
-                        OR (source='website' AND user_id IS NULL)))''')
-                self.db.execute('''INSERT INTO requests_with_sources(id,user_id,phone,problem,created,booking)
-                    SELECT id,user_id,phone,problem,created,booking FROM requests''')
+                        OR (source IN ('website','phone') AND user_id IS NULL)))''')
+                names = ','.join(name for name in supported if name in columns)
+                self.db.execute(f'INSERT INTO requests_with_sources({names}) SELECT {names} FROM requests')
                 self.db.execute('DROP TABLE requests')
                 self.db.execute('ALTER TABLE requests_with_sources RENAME TO requests')
                 self.db.execute("CREATE UNIQUE INDEX requests_phone_unique ON requests(phone) WHERE source='telegram'")
-            columns = {row['name'] for row in self.db.execute('PRAGMA table_info(requests)')}
-            if 'preferred_date' not in columns:
-                self.db.execute('ALTER TABLE requests ADD COLUMN preferred_date TEXT')
-            if 'preferred_time' not in columns:
-                self.db.execute('ALTER TABLE requests ADD COLUMN preferred_time TEXT')
-            if 'consent_version' not in columns:
-                self.db.execute('ALTER TABLE requests ADD COLUMN consent_version TEXT')
-            if 'consent_recorded_at' not in columns:
-                self.db.execute('ALTER TABLE requests ADD COLUMN consent_recorded_at TEXT')
             self.db.execute('''CREATE TABLE IF NOT EXISTS web_submissions (
                 submission_id TEXT PRIMARY KEY, payload_hash TEXT NOT NULL,
                 request_id INTEGER NOT NULL, created TEXT NOT NULL)''')
@@ -234,21 +234,32 @@ class Store:
             (day, request_id))}
         return [clock for clock in TIMES if clock not in occupied and slot_start(day, clock) > local_now()]
 
+    def cancel_appointment(self, request_id):
+        """Call inside the same transaction as the associated status change."""
+        self.db.execute('UPDATE appointments SET cancelled=? WHERE request_id=? AND cancelled IS NULL',
+                        (now(), request_id))
+        self.db.execute('UPDATE requests SET booking=NULL WHERE id=?', (request_id,))
+
+    def replace_appointment(self, request_id, day, clock):
+        """Call inside a transaction so a slot conflict rolls back the cancellation."""
+        validate_slot(day, clock)
+        booking = f'{datetime.fromisoformat(day):%d.%m.%Y} {clock}'
+        self.cancel_appointment(request_id)
+        self.db.execute('INSERT INTO appointments(request_id,day,clock,created) VALUES(?,?,?,?)',
+                        (request_id, day, clock, now()))
+        self.db.execute('UPDATE requests SET booking=? WHERE id=?', (booking, request_id))
+        return booking
+
     def book(self, uid, day, clock):
         validate_slot(day, clock)
         request = self.latest(uid)
         if not request:
             raise ValueError('Сначала заполните заявку.')
-        booking = f'{datetime.fromisoformat(day):%d.%m.%Y} {clock}'
         try:
             with self.db:
                 # UNIQUE-индекс не позволит двум клиентам занять один слот.
                 # При конфликте транзакция сохраняет прежнюю запись клиента.
-                self.db.execute('UPDATE appointments SET cancelled=? WHERE request_id=? AND cancelled IS NULL',
-                                (now(), request['id']))
-                self.db.execute('INSERT INTO appointments(request_id,day,clock,created) VALUES(?,?,?,?)',
-                                (request['id'], day, clock, now()))
-                self.db.execute('UPDATE requests SET booking=? WHERE id=?', (booking, request['id']))
+                booking = self.replace_appointment(request['id'], day, clock)
                 self.db.execute("UPDATE users SET stage='menu' WHERE id=?", (uid,))
                 self.db.execute('DELETE FROM booking_selections WHERE user_id=?', (uid,))
         except sqlite3.IntegrityError as error:

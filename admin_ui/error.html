@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}Ошибка{% endblock %}
+{% block body %}
+<section class="panel"><h1>Запрос не выполнен</h1><p class="error" role="alert">{{ message }}</p>
+<a class="button quiet" href="/admin">На главную панели</a></section>
+{% endblock %}

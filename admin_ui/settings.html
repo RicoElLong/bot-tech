@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% from "macros.html" import csrf %}
+{% block title %}Настройки сайта{% endblock %}
+{% block body %}
+<header class="page-head"><div><p class="eyebrow">Серверная версия</p><h1>Настройки сайта</h1><p class="muted">График, описания и стартовые цены.</p></div></header>
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+{% if draft %}
+<section class="panel publish-bar">
+  <div><h2>{{ 'Есть неопубликованный черновик' if revision and draft != public else 'Текущая версия' }}</h2>
+  <p class="muted">{{ 'Опубликовано ' ~ (published_at|local_time) if published_at else 'На сайте показаны исходные значения.' }}</p></div>
+  <div class="actions"><a class="button quiet" href="/admin/site/preview" target="_blank" rel="noopener">Предпросмотр ↗</a>
+  {% if revision and draft != public %}<form method="post" action="/admin/site/publish">
+    {{ csrf(admin) }}<input type="hidden" name="revision" value="{{ revision }}"><button type="submit">Опубликовать черновик</button>
+  </form>{% endif %}</div>
+</section>
+<form class="stack top-gap" method="post" action="/admin/site/save">
+  {{ csrf(admin) }}<input type="hidden" name="revision" value="{{ revision }}">
+  <section class="panel">
+    <h2>Часы работы</h2><p class="muted">Отображаются на сайте по Самаре. Слоты визитов задаются расписанием.</p>
+    <div class="split"><label>Открытие<input type="time" name="opening" value="{{ submitted.get('opening', draft.opening) }}" required></label>
+    <label>Закрытие<input type="time" name="closing" value="{{ submitted.get('closing', draft.closing) }}" required></label></div>
+  </section>
+  <section class="panel">
+    <h2>Неисправности и цены</h2>
+    <div class="settings-grid">
+    {% for key, label in services.items() %}
+      <fieldset><legend>{{ label }}</legend>
+        <label>Описание<textarea name="{{ key }}-description" maxlength="160" rows="2" required>{{ submitted.get(key ~ '-description', draft.services[key].description) }}</textarea></label>
+        <label>Стартовая цена, ₽<input name="{{ key }}-price" type="number" min="1" max="999999" value="{{ submitted.get(key ~ '-price', draft.services[key].price) }}" required></label>
+      </fieldset>
+    {% endfor %}
+    </div>
+  </section>
+  <button type="submit">Сохранить черновик</button>
+</form>
+{% else %}
+<section class="panel empty"><h2>Подключите актуальный шаблон</h2><p class="muted">Укажите в WEB_SITE_ROOT каталог web из ветки сайта с поддержкой настроек.</p></section>
+{% endif %}
+{% endblock %}

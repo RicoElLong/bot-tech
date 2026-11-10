@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% from "macros.html" import csrf, badge, call %}
+{% block title %}Заявка №{{ row.id }}{% endblock %}
+{% block body %}
+<header class="page-head"><div>
+  <a class="back" href="/admin/requests{{ '?archive=1' if row.archived_at else '' }}">← К заявкам</a>
+  <p class="eyebrow">№{{ row.id }} · {{ sources[row.source] }} · {{ row.created|local_time }}</p>
+  <h1>{{ row.name }}</h1>{{ badge(row, statuses) }}
+</div><a class="button" href="tel:{{ row.phone }}">Позвонить</a></header>
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+<div class="split">
+  <section class="panel">
+    <h2>Данные клиента</h2>
+    <dl class="details">
+      <div><dt>Телефон</dt><dd>{{ call(row) }}</dd></div>
+      <div><dt>Марка</dt><dd>{{ row.brand or '—' }}</dd></div>
+      <div><dt>Неисправность</dt><dd>{{ row.problem }}</dd></div>
+      <div><dt>Комментарий клиента</dt><dd>{{ row.comment or '—' }}</dd></div>
+      <div><dt>Пожелание клиента</dt><dd>{{ (row.preferred_date ~ ' ' ~ (row.preferred_time or '')) if row.preferred_date else '—' }}</dd></div>
+      <div><dt>Подтверждённый визит</dt><dd>{{ row.booking or 'Ещё не назначен' }}</dd></div>
+    </dl>
+  </section>
+  <div class="stack">
+    {% if not row.archived_at %}
+    <section class="panel" id="status">
+      <h2>Статус заявки</h2>
+      <form class="stack" method="post" action="/admin/requests/{{ row.id }}/status">
+        {{ csrf(admin) }}
+        <label>Новый статус<select name="status" required>
+          {% if row.status == 'scheduled' %}<option value="" selected disabled>Визит назначен</option>{% endif %}
+          {% for key, label in statuses.items() if key != 'scheduled' %}
+          <option value="{{ key }}"{% if key == row.status %} selected{% endif %}{% if row.status == 'scheduled' and key in ('new','in_progress') %} disabled{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select></label>
+        <button type="submit">Сохранить статус</button>
+      </form>
+    </section>
+    <section class="panel" id="visit">
+      <h2>{{ 'Перенести визит' if row.booking else 'Назначить визит' }}</h2>
+      {% if row.status not in ('done','cancelled') %}
+      <form class="stack" method="post" action="/admin/requests/{{ row.id }}/schedule">
+        {{ csrf(admin) }}
+        <label>Дата и время по Самаре<select name="slot" required>
+          <option value="">Выберите слот</option>
+          {% for day, times in slots.items() if times %}
+          <optgroup label="{{ day[8:10] }}.{{ day[5:7] }}">
+            {% for clock, busy in times %}
+            <option value="{{ day }}|{{ clock }}"{% if busy %} disabled{% elif day == preferred and clock == preferred_clock %} selected{% endif %}>{{ clock }}{{ ' · занят' if busy else '' }}</option>
+            {% endfor %}
+          </optgroup>{% endfor %}
+        </select></label>
+        <button type="submit">{{ 'Подтвердить перенос' if row.booking else 'Подтвердить визит' }}</button>
+      </form>
+      {% if row.booking %}<form class="top-gap" method="post" action="/admin/requests/{{ row.id }}/cancel-visit">{{ csrf(admin) }}<button class="quiet" type="submit">Отменить визит</button></form>{% endif %}
+      {% else %}<p class="muted">Чтобы назначить визит, верните заявку в работу.</p>{% endif %}
+    </section>
+    {% endif %}
+  </div>
+</div>
+<section class="panel top-gap">
+  <h2>История и заметки</h2>
+  {% if not row.archived_at %}
+  <form class="stack" method="post" action="/admin/requests/{{ row.id }}/note">
+    {{ csrf(admin) }}<label>Внутренняя заметка<textarea name="note" rows="3" maxlength="1000" required></textarea></label>
+    <button class="quiet" type="submit">Добавить заметку</button>
+  </form>
+  {% endif %}
+  {% if history %}<ol class="timeline">{% for item in history %}
+    <li><strong>{{ item.action }}</strong><small>{{ item.created|local_time }} · {{ item.actor }}</small>
+      {% if item.detail %}<p>{{ item.detail }}</p>{% endif %}</li>
+  {% endfor %}</ol>{% else %}<p class="muted top-gap">История пока пуста.</p>{% endif %}
+</section>
+<section class="panel top-gap">
+  <h2>{{ 'Восстановление' if row.archived_at else 'Архив' }}</h2>
+  <p class="muted">Архив скрывает заявку из рабочего списка. Подтверждённый визит остаётся в расписании.</p>
+  <form method="post" action="/admin/requests/{{ row.id }}/{{ 'restore' if row.archived_at else 'archive' }}">
+    {{ csrf(admin) }}<button class="quiet" type="submit">{{ 'Восстановить заявку' if row.archived_at else 'Перенести в архив' }}</button>
+  </form>
+</section>
+{% endblock %}

@@ -23,6 +23,7 @@ from telegram import LinkPreviewOptions
 from telegram.error import RetryAfter, TelegramError
 
 from storage import SubmissionConflict, canonical_phone
+from site_content import published as published_site_content, render as render_site_content
 
 ROOT = Path(__file__).resolve().parent
 LOG = logging.getLogger(__name__)
@@ -213,7 +214,8 @@ async def deliver_notifications(db, bot, admins):
 
 
 class WebsiteService:
-    def __init__(self, db, bot, admins, settings=None, web_root=None, site_identity=None):
+    def __init__(self, db, bot, admins, settings=None, web_root=None, site_identity=None,
+                 admin_enabled=False):
         if not admins:
             raise ValueError('Для приёма заявок с сайта заполните ADMIN_IDS.')
         self.db, self.bot, self.admins = db, bot, frozenset(admins)
@@ -222,19 +224,30 @@ class WebsiteService:
         self.site_identity = site_identity
         self.proxies = tuple(ipaddress.ip_network(item) for item in self.settings.trusted_proxies)
         self.limiter = RateLimiter()
+        self.admin = None
+        if admin_enabled:
+            from admin_web import AdminWeb
+            self.admin = AdminWeb(self, RateLimiter(limit=5, window=600))
         self.runner = None
         self.task = None
 
-    def client_ip(self, request):
+    def trusted_peer(self, request):
         peer = ipaddress.ip_address(request.remote or '0.0.0.0')
-        if any(peer in network for network in self.proxies):
+        return any(peer in network for network in self.proxies)
+
+    def secure_admin_request(self, request):
+        return request.secure or (
+            self.trusted_peer(request) and request.headers.get('X-Forwarded-Proto') == 'https')
+
+    def client_ip(self, request):
+        if self.trusted_peer(request):
             forwarded = request.headers.get('X-Real-IP')
             if forwarded:
                 try:
                     return str(ipaddress.ip_address(forwarded))
                 except ValueError:
                     pass
-        return str(peer)
+        return request.remote or '0.0.0.0'
 
     def make_app(self):
         @web.middleware
@@ -268,6 +281,15 @@ class WebsiteService:
             )
             if request.path.startswith('/api/'):
                 response.headers['Cache-Control'] = 'no-store'
+            if request.path == '/admin' or request.path.startswith('/admin/'):
+                response.headers['Cache-Control'] = 'no-store'
+                response.headers['Referrer-Policy'] = 'no-referrer'
+                response.headers['X-Robots-Tag'] = 'noindex, nofollow'
+                preview = request.path == '/admin/site/preview'
+                response.headers['Content-Security-Policy'] = (
+                    "default-src 'none'; base-uri 'none'; frame-ancestors 'none'; "
+                    + ("style-src 'self' 'unsafe-inline'; img-src 'self' data:; form-action 'none'"
+                       if preview else "style-src 'self'; script-src 'self'; form-action 'self'"))
             return response
 
         app = web.Application(client_max_size=12 * 1024, middlewares=[responses])
@@ -281,6 +303,8 @@ class WebsiteService:
         app.router.add_get('/legal', self.legal)
         app.router.add_get('/work-order', self.work_order)
         app.router.add_get('/request-form.js', self.form_script)
+        if self.admin:
+            self.admin.register(app)
         return app
 
     async def intake(self, request):
@@ -311,7 +335,7 @@ class WebsiteService:
     async def preflight(self, request):
         return web.Response(status=204)
 
-    def site_document(self, filename):
+    def site_document(self, filename, preview=None):
         if not self.site_identity:
             raise web.HTTPServiceUnavailable(text='Реквизиты исполнителя ещё не настроены.')
         source = (self.web_root / filename).read_text(encoding='utf-8')
@@ -319,6 +343,12 @@ class WebsiteService:
             source = source.replace('{{' + key + '}}', escape_html(value, quote=True))
         if '{{OWNER_' in source or '{{CONTACT_' in source:
             raise web.HTTPServiceUnavailable(text='Не заполнены реквизиты сайта.')
+        if filename == 'index.html':
+            content = preview or published_site_content(self.db.db if self.db else None)
+            if content:
+                source = render_site_content(source, content)
+            if preview is not None:
+                source = source.replace('</head>', '<style>.reveal{opacity:1!important;transform:none!important}</style></head>', 1)
         return web.Response(text=source, content_type='text/html', charset='utf-8')
 
     async def index(self, request):
@@ -371,9 +401,14 @@ async def start_website(application):
     if enabled not in ('0', 'false', 'no', '', '1', 'true', 'yes'):
         raise ValueError('WEB_ENABLED должен быть 0 или 1.')
     if enabled in ('1', 'true', 'yes'):
+        admin_enabled = os.getenv('WEB_ADMIN_ENABLED', '0').strip()
+        if admin_enabled not in ('0', '1'):
+            raise ValueError('WEB_ADMIN_ENABLED должен быть 0 или 1.')
         identity = SiteIdentity.from_env()  # fail closed if business, data or advertising terms unverified
         service = WebsiteService(application.bot_data['store'], application.bot,
-                                 application.bot_data['admins'], site_identity=identity)
+                                 application.bot_data['admins'], site_identity=identity,
+                                 web_root=os.getenv('WEB_SITE_ROOT') or None,
+                                 admin_enabled=admin_enabled == '1')
         await service.start()
         application.bot_data['website_service'] = service
 

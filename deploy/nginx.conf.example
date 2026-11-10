@@ -10,3 +10,13 @@ location / {
     proxy_set_header X-Forwarded-Proto $scheme;
     proxy_read_timeout 20s;
 }
+
+# Keep authentication and contact searches out of access logs.
+location ~ ^/admin(/|$) {
+    access_log off;
+    proxy_pass http://127.0.0.1:8080;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_read_timeout 20s;
+}

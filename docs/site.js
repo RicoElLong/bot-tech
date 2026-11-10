@@ -1,18 +1,24 @@
 'use strict';
 
 const header = document.getElementById('header');
+const washerDrum = document.querySelector('[data-washer-drum]');
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 let scrollQueued = false;
-function updateHeader() {
-  header.classList.toggle('is-scrolled', window.scrollY > 12);
+function updateHeroScroll() {
+  const scrollY = window.scrollY;
+  header.classList.toggle('is-scrolled', scrollY > 12);
+  const angle = reducedMotion.matches ? 0 : (Math.max(0, scrollY) * 0.7) % 360;
+  washerDrum.setAttribute('transform', 'rotate(' + angle + ' 244 283)');
   scrollQueued = false;
 }
 window.addEventListener('scroll', () => {
   if (!scrollQueued) {
     scrollQueued = true;
-    window.requestAnimationFrame(updateHeader);
+    window.requestAnimationFrame(updateHeroScroll);
   }
 }, { passive: true });
-updateHeader();
+reducedMotion.addEventListener('change', updateHeroScroll);
+updateHeroScroll();
 
 const toggle = document.querySelector('.menu-toggle');
 const menu = document.getElementById('mobile-nav');

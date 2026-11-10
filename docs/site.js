@@ -8,7 +8,7 @@ function updateHeroScroll() {
   const scrollY = window.scrollY;
   header.classList.toggle('is-scrolled', scrollY > 12);
   const angle = reducedMotion.matches ? 0 : (Math.max(0, scrollY) * 0.7) % 360;
-  washerDrum.setAttribute('transform', 'rotate(' + angle + ' 244 283)');
+  washerDrum.setAttribute('transform', 'rotate(' + angle + ')');
   scrollQueued = false;
 }
 window.addEventListener('scroll', () => {

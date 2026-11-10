@@ -132,9 +132,10 @@ async def admin_page(update, context):
             text += f' (ID {identity})'
         if kind == 'requests':
             text += f'\nЗаявка №{row["id"]}\nТелефон: {row["phone"]}\nПроблема: {row["problem"]}\nЗапись: {(row["booking"] or "не указана")}'
-            text += '\nИсточник: ' + ('сайт' if row['source'] == 'website' else 'Telegram')
-            if row['source'] == 'website':
+            text += '\nИсточник: ' + {'website': 'сайт', 'telegram': 'Telegram', 'phone': 'телефон'}[row['source']]
+            if row['source'] in ('website', 'phone'):
                 text += f'\nМарка: {row["brand"]}\nКомментарий: {row["comment"] or "—"}'
+            if row['source'] == 'website':
                 text += f'\nЖелаемое время: {row["preferred_date"] or "не указано"} {row["preferred_time"] or ""} (ожидает подтверждения)'
         entries.append(text)
     buttons = []

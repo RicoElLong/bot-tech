@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Вход{% endblock %}
+{% block body %}
+<section class="panel login-panel">
+  <p class="brand"><span>Быт</span>Тех</p>
+  <p class="eyebrow">Панель владельца</p>
+  <h1>Вход в админку</h1>
+  <p class="muted">Заявки, визиты и настройки сайта.</p>
+  {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+  <form class="stack" method="post" action="/admin/login">
+    <input type="hidden" name="csrf" value="{{ token }}">
+    <label>Логин <input name="username" autocomplete="username" maxlength="64" required autofocus></label>
+    <label>Пароль <input type="password" name="password" autocomplete="current-password" maxlength="256" required></label>
+    <button type="submit">Войти</button>
+  </form>
+</section>
+{% endblock %}

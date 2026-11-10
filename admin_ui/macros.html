@@ -1,0 +1,6 @@
+{% macro csrf(admin) -%}<input type="hidden" name="csrf" value="{{ admin.csrf }}">{%- endmacro %}
+{% macro badge(row, statuses) -%}
+<span class="badge badge-{{ row.status }}">{{ statuses[row.status] }}</span>
+{%- if row.archived_at %} <span class="badge">Архив</span>{% endif %}
+{%- endmacro %}
+{% macro call(row) -%}<a class="phone" href="tel:{{ row.phone }}">{{ row.phone }}</a>{%- endmacro %}

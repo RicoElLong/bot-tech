@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% from "macros.html" import csrf %}
+{% block title %}Заявка по звонку{% endblock %}
+{% block body %}
+<header class="page-head"><div><a class="back" href="/admin/requests">← К заявкам</a><h1>Заявка по звонку</h1></div></header>
+{% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+<form class="panel stack narrow" method="post" action="/admin/requests/new">
+  {{ csrf(admin) }}<input type="hidden" name="token" value="{{ token }}">
+  <label>Имя клиента<input name="name" autocomplete="off" maxlength="100" value="{{ values.get('name','') }}" required></label>
+  <label>Телефон<input name="phone" type="tel" autocomplete="off" maxlength="40" value="{{ values.get('phone','') }}" required></label>
+  <label>Марка машины<input name="brand" maxlength="100" value="{{ values.get('brand','') }}"></label>
+  <label>Неисправность<textarea name="problem" rows="3" maxlength="500" required>{{ values.get('problem','') }}</textarea></label>
+  <label>Комментарий клиента<textarea name="comment" rows="3" maxlength="2000">{{ values.get('comment','') }}</textarea></label>
+  <button type="submit">Создать заявку</button>
+</form>
+{% endblock %}

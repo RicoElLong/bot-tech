@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% from "macros.html" import badge, call %}
+{% block title %}Расписание{% endblock %}
+{% block body %}
+<header class="page-head"><div><p class="eyebrow">Подтверждённые визиты · Самара</p><h1>Расписание</h1></div>
+<div class="actions">
+  <a class="button {{ 'quiet' if week else '' }}" href="/admin/agenda?date={{ selected }}&amp;view=day">День</a>
+  <a class="button {{ '' if week else 'quiet' }}" href="/admin/agenda?date={{ selected }}&amp;view=week">Неделя</a>
+</div></header>
+<div class="panel agenda-nav">
+  <a class="button quiet" href="/admin/agenda?date={{ previous }}&amp;view={{ 'week' if week else 'day' }}">← Назад</a>
+  <form class="actions" method="get" action="/admin/agenda">
+    <input type="hidden" name="view" value="{{ 'week' if week else 'day' }}">
+    <input aria-label="Дата расписания" name="date" type="date" value="{{ selected }}" required>
+    <button type="submit">Открыть</button>
+  </form>
+  <a class="button quiet" href="/admin/agenda?date={{ following }}&amp;view={{ 'week' if week else 'day' }}">Далее →</a>
+</div>
+<div class="agenda">
+{% for day, rows in groups.items() %}
+<section class="panel">
+  <h2>{{ day[8:10] }}.{{ day[5:7] }}.{{ day[:4] }}</h2>
+  {% if rows %}<ul class="visits">{% for row in rows %}
+    <li><time>{{ row.appointment_time }}</time><div><a class="strong" href="/admin/requests/{{ row.id }}">№{{ row.id }} · {{ row.name }}</a>
+    <small>{{ call(row) }}</small></div>{{ badge(row, statuses) }}</li>
+  {% endfor %}</ul>{% else %}<p class="muted">Визитов нет.</p>{% endif %}
+</section>
+{% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Обзор{% endblock %}
+{% block body %}
+<header class="page-head">
+  <div><p class="eyebrow">Самара · {{ today }}</p><h1>Рабочий день</h1><p class="muted">Что требует внимания сейчас.</p></div>
+  <a class="button" href="/admin/requests/new">+ Заявка по звонку</a>
+</header>
+<section class="metrics" aria-label="Сводка">
+  <a class="panel metric" href="/admin/requests?status=new"><span>Новые заявки</span><strong>{{ counts.new }}</strong><small>Открыть входящие →</small></a>
+  <a class="panel metric" href="/admin/agenda"><span>Визиты сегодня</span><strong>{{ counts.today }}</strong><small>Открыть расписание →</small></a>
+  <a class="panel metric metric-attention" href="/admin/requests?needs_call=1"><span>Требуют звонка</span><strong>{{ counts.needs_call }}</strong><small>Новые заявки старше 24 часов →</small></a>
+</section>
+{% endblock %}
